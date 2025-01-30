@@ -1,4 +1,7 @@
 import puppeteer from "puppeteer";
+import axios from "axios";
+import cheerio from "cheerio";
+// import { db } from "./firebase";
 
 export async function scrapeKaufland() {
   const browser = await puppeteer.launch({ headless: true });
@@ -107,3 +110,22 @@ export async function scrapeCarrefour() {
       await browser.close();
     }
   }
+
+  // Termékek mentése Firestore-ba
+// async function saveProductsToFirestore(products: any[]) {
+//   const batch = db.batch();
+//   products.forEach((product) => {
+//     const productRef = db.collection("products").doc(); // Automatikus ID
+//     batch.set(productRef, product);
+//   });
+//   await batch.commit();
+// }
+
+// // Scrape és mentés
+// async function scrapeAndSave() {
+//   const products = await scrapeLidlProducts();
+//   await saveProductsToFirestore(products);
+//   console.log("Termékek sikeresen feltöltve!");
+// }
+
+// scrapeAndSave();

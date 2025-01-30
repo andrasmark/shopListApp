@@ -1,12 +1,8 @@
-// import cron from 'node-cron';
-// import { startScraping } from '../scraping/scrape';
-// import { saveToFirestore } from '../firebase/firestore';
+// import cron from "node-cron";
+// import { scrapeAndSave } from "./scraper";
 
-// cron.schedule('0 0 * * *', async () => {
-//   console.log('Scheduled scraping started...');
-//   const scrapedData = await startScraping();
-//   await saveToFirestore(scrapedData);
-//   console.log('Scraping completed and saved to Firestore.');
+// automatic scraping every day at 12:00
+// cron.schedule("0 12 * * *", () => {
+//   console.log("Starting scraper...");
+//   scrapeAndSave();
 // });
-
-// console.log('Cron job scheduled to run every midnight.');

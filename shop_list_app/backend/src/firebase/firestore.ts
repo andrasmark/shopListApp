@@ -1,26 +1,13 @@
-// import admin from 'firebase-admin';
-// import fs from 'fs';
+import admin from "firebase-admin";
+import firebaseConfig from "../firebaseConfig";
 
-// const serviceAccount = JSON.parse(fs.readFileSync(process.env.FIREBASE_CREDENTIALS || '', 'utf8'));
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: firebaseConfig.app.options.projectId,
+    clientEmail: "A TE CLIENT EMAIL-ED",
+    privateKey: "A TE PRIVATE KEY-ED".replace(/\\n/g, "\n"),
+  }),
+});
 
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-// });
-
-// const db = admin.firestore();
-
-// interface Product {
-//   name: string;
-//   price: string;
-//   image: string;
-// }
-
-// export async function saveToFirestore(products: Product[]): Promise<void> {
-//   const batch = db.batch();
-//   products.forEach(product => {
-//     const docRef = db.collection('products').doc();
-//     batch.set(docRef, product);
-//   });
-//   await batch.commit();
-//   console.log('Data saved to Firestore');
-// }
+const db = admin.firestore();
+export { db };
