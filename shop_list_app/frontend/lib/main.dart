@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shop_list_app/pages/home_page.dart';
 import 'package:shop_list_app/pages/items_page.dart';
 import 'package:shop_list_app/pages/list_page.dart';
+import 'package:shop_list_app/pages/splash_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,11 +22,12 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: HomePage(),
+      home: SplashPage(),
       routes: {
         HomePage.id: (context) => HomePage(),
         ItemsPage.id: (context) => ItemsPage(),
         ListPage.id: (context) => ListPage(),
+        SplashPage.id: (context) => SplashPage(),
       },
     );
   }
