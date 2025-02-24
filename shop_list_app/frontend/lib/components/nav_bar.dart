@@ -10,6 +10,13 @@ BottomNavigationBar NavBar(
     items: const [
       BottomNavigationBarItem(
         icon: Icon(
+          Icons.list,
+          size: 30,
+        ),
+        label: 'My lists',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(
           Icons.home,
           size: 30,
         ),
@@ -17,7 +24,7 @@ BottomNavigationBar NavBar(
       ),
       BottomNavigationBarItem(
         icon: Icon(
-          Icons.shop,
+          Icons.shopping_basket,
           size: 30,
         ),
         label: 'Items',

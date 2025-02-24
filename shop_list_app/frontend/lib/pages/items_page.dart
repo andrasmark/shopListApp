@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shop_list_app/pages/home_page.dart';
 
 import '../components/nav_bar.dart';
+import 'list_page.dart';
 
 class ItemsPage extends StatefulWidget {
   const ItemsPage({super.key});
@@ -12,13 +13,16 @@ class ItemsPage extends StatefulWidget {
 }
 
 class _ItemsPageState extends State<ItemsPage> {
-  int _selectedIndex = 1;
+  int _selectedIndex = 2;
 
   void _onNavBarItemTapped(int index) {
     setState(() {
       // _selectedIndex = index;
       switch (index) {
         case 0:
+          Navigator.pushReplacementNamed(context, ListPage.id);
+          break;
+        case 1:
           Navigator.pushReplacementNamed(context, HomePage.id);
           break;
       }
