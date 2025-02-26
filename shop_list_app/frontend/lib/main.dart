@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:shop_list_app/pages/authentication/list_page.dart';
+import 'package:shop_list_app/pages/authentication/registration_page.dart';
 import 'package:shop_list_app/pages/home_page.dart';
 import 'package:shop_list_app/pages/items_page.dart';
-import 'package:shop_list_app/pages/list_page.dart';
+import 'package:shop_list_app/pages/login_page.dart';
 import 'package:shop_list_app/pages/splash_page.dart';
 
 Future<void> main() async {
@@ -22,12 +24,15 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: SplashPage(),
+      //home: SplashPage(),
+      home: LoginPage(),
       routes: {
         HomePage.id: (context) => HomePage(),
         ItemsPage.id: (context) => ItemsPage(),
         ListPage.id: (context) => ListPage(),
         SplashPage.id: (context) => SplashPage(),
+        RegistrationPage.id: (context) => RegistrationPage(),
+        LoginPage.id: (context) => LoginPage(),
       },
     );
   }

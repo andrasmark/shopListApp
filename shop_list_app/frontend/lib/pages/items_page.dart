@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shop_list_app/pages/home_page.dart';
 
 import '../components/nav_bar.dart';
-import 'list_page.dart';
+import 'authentication/list_page.dart';
 
 class ItemsPage extends StatefulWidget {
   const ItemsPage({super.key});
