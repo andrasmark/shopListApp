@@ -5,7 +5,7 @@ import 'package:shop_list_app/services/authorization.dart';
 import '../../constants/constants.dart';
 import '../../services/user_service.dart';
 import '../home_page.dart';
-import '../login_page.dart';
+import 'login_page.dart';
 
 class RegistrationPage extends StatefulWidget {
   static String id = 'registration_page';

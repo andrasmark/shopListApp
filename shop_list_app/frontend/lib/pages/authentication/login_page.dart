@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:shop_list_app/services/authorization.dart';
 
-import '../constants/constants.dart';
-import 'authentication/registration_page.dart';
-import 'home_page.dart';
+import '../../constants/constants.dart';
+import '../home_page.dart';
+import 'registration_page.dart';
 
 class LoginPage extends StatefulWidget {
   static String id = 'login_page';

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shop_list_app/components/product_list.dart';
 import 'package:shop_list_app/pages/items_page.dart';
 
-import '../../components/nav_bar.dart';
-import '../home_page.dart';
+import '../components/nav_bar.dart';
+import 'home_page.dart';
 
 class ListPage extends StatefulWidget {
   const ListPage({super.key});

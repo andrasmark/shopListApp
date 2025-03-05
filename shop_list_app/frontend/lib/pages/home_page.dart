@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shop_list_app/pages/authentication/list_page.dart';
+import 'package:shop_list_app/pages/list_page.dart';
 
 import '../components/list_card_home.dart';
 import '../components/nav_bar.dart';

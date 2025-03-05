@@ -23,6 +23,7 @@ dev_dependencies:
   cloud_firestore: ^5.4.5
   google_fonts: ^6.2.1
   modal_progress_hud_nsn: ^0.5.0
+  carousel_slider: ^5.0.0
 
 flutter:
 
