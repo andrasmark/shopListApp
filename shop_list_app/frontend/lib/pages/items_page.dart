@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop_list_app/constants/color_scheme.dart';
 import 'package:shop_list_app/pages/home_page.dart';
 
 import '../components/nav_bar.dart';
@@ -38,54 +39,57 @@ class _ItemsPageState extends State<ItemsPage> {
         title: Text("Items"),
         backgroundColor: Colors.lightBlueAccent,
       ),
-      body: Column(
-        children: [
-          Text("Products from lidl"),
-          StreamBuilder<List<Product>>(
-            stream: _productService.getProducts(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('No products found.'));
-              } else {
-                final products = snapshot.data!;
-                return Container(
-                  padding: EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  height: 200,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      final product = products[index];
-                      return GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return ItemInfo(product: product);
-                            },
-                          );
-                        },
-                        child: Container(
-                          width: MediaQuery.of(context).size.width / 3,
-                          margin: EdgeInsets.symmetric(horizontal: 4.0),
-                          child: ItemCard(product: product),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              }
-            },
-          ),
-        ],
+      body: Container(
+        color: COLOR_BEIGE,
+        child: Column(
+          children: [
+            Text("Products from lidl"),
+            StreamBuilder<List<Product>>(
+              stream: _productService.getProducts(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('No products found.'));
+                } else {
+                  final products = snapshot.data!;
+                  return Container(
+                    padding: EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    height: 200,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return ItemInfo(product: product);
+                              },
+                            );
+                          },
+                          child: Container(
+                            width: MediaQuery.of(context).size.width / 3,
+                            margin: EdgeInsets.symmetric(horizontal: 4.0),
+                            child: ItemCard(product: product),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: NavBar(_selectedIndex, _onNavBarItemTapped),
     );
@@ -100,6 +104,7 @@ class ItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.grey[100],
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

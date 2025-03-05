@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shop_list_app/constants/color_scheme.dart';
 import 'package:shop_list_app/pages/list_page.dart';
 
 import '../components/list_card_home.dart';
@@ -44,30 +45,33 @@ class _HomePageState extends State<HomePage> {
         ),
         //backgroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            ListCardHome(
-              icon: Icons.bakery_dining,
-              title: "New Grocery List",
-              subtitle: "Create a new grocery list, and add items anytime!",
-              onTap: () => print("Shop Now Clicked"),
-            ),
-            ListCardHome(
-              icon: Icons.supervisor_account,
-              title: "New Shared List",
-              subtitle: "Create a new shared list, and invite others to it!",
-              onTap: () => print("Order History Clicked"),
-            ),
-            ListCardHome(
-              icon: Icons.local_offer,
-              title: "",
-              subtitle: "",
-              onTap: () => print(""),
-            ),
-          ],
+      body: Container(
+        color: COLOR_BEIGE,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              ListCardHome(
+                icon: Icons.bakery_dining,
+                title: "New Grocery List",
+                subtitle: "Create a new grocery list, and add items anytime!",
+                onTap: () => print("Shop Now Clicked"),
+              ),
+              ListCardHome(
+                icon: Icons.supervisor_account,
+                title: "New Shared List",
+                subtitle: "Create a new shared list, and invite others to it!",
+                onTap: () => print("Order History Clicked"),
+              ),
+              ListCardHome(
+                icon: Icons.local_offer,
+                title: "",
+                subtitle: "",
+                onTap: () => print(""),
+              ),
+            ],
+          ),
         ),
       ),
       //floatingActionButton: Fab(context),
