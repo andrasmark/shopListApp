@@ -76,9 +76,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
                   try {
                     final newUser = await authService.register(email, password);
-                    if (newUser != null) {
-                      await userService.addUser(newUser.uid, email);
-                    }
+                    // if (newUser != null) {
+                    //   await userService.addUser(newUser.uid, email);
+                    // }
 
                     Navigator.pushReplacementNamed(context, HomePage.id);
                   } catch (e) {

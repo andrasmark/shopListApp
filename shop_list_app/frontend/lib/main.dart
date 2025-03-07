@@ -25,8 +25,8 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       //home: SplashPage(),
-      //home: LoginPage(),
-      home: HomePage(),
+      home: LoginPage(),
+      //home: HomePage(),
       routes: {
         HomePage.id: (context) => HomePage(),
         ItemsPage.id: (context) => ItemsPage(),
