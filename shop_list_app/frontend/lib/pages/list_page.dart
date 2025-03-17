@@ -3,6 +3,7 @@ import 'package:shop_list_app/pages/items_page.dart';
 import 'package:shop_list_app/services/authorization.dart';
 
 import '../components/groceryListCard.dart';
+import '../components/nav_bar.dart';
 import '../services/user_service.dart';
 import 'groceryListPage.dart';
 import 'home_page.dart';
@@ -84,6 +85,7 @@ class _ListPageState extends State<ListPage> {
           }
         },
       ),
+      bottomNavigationBar: NavBar(_selectedIndex, _onNavBarItemTapped),
     );
   }
 }

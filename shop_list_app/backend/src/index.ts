@@ -11,13 +11,13 @@ app.get("/", (req, res) => {
 
 app.get("/scrape", async (req, res) => {
   console.log("Adatok lekérése folyamatban... KAUFLAND");
-  await scrapeKaufland();
+  //await scrapeKaufland();
   
   console.log("Adatok lekérése folyamatban... CARREFOUR");
   //await scrapeCarrefour();
   
   console.log("Adatok lekérése folyamatban... LIDL");
-  //await scrapeLidl();
+  await scrapeLidl();
   res.send("Scraping kész! Nézd meg a konzolt.");
 
 });
