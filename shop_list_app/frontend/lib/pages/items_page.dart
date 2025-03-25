@@ -43,7 +43,8 @@ class _ItemsPageState extends State<ItemsPage> {
     switch (_selectedStore) {
       case 'Kaufland':
         return _productService.getProductsFromKaufland();
-      // Add cases for other stores when you implement their services
+      case 'Lidl':
+        return _productService.getProductsFromLidl();
       default:
         return _productService.getProductsFromKaufland();
     }
@@ -53,11 +54,17 @@ class _ItemsPageState extends State<ItemsPage> {
     if (_searchQuery.isEmpty) {
       return products;
     }
-    return products
-        .where((product) => product.productName
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase()))
-        .toList();
+    final searchLower = _searchQuery.toLowerCase();
+    return products.where((product) {
+      final productName = product.productName?.toLowerCase() ?? '';
+      return productName.contains(searchLower);
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override

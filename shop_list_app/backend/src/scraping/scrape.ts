@@ -55,7 +55,7 @@ export async function scrapeLidl() {
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
 
   try {
-    await page.goto("https://www.lidl.ro/c/oferte-de-luni/a10066562?channel=store&tabCode=Current_Sales_Week", { waitUntil: "networkidle2" }); // vár az oldal teljes betöltésére
+    await page.goto("https://www.lidl.ro/c/oferte-de-luni/a10067640?channel=store&tabCode=Current_Sales_Week", { waitUntil: "networkidle2" }); // vár az oldal teljes betöltésére
 
     // Süti elfogadás gomb (ha szükséges)
     // try {
@@ -181,12 +181,17 @@ async function saveKAUFLANDProductsToFirestore(products: any[]) {
   const batch = db.batch();
   products.forEach((product) => {
     const productRef = db.collection("productsKaufland").doc(); // Automatikus ID
+
+    // ar converalasa double-re
+    const price = parseFloat(product.price.replace(',', '.')) || 0;
+    const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
+
     batch.set(productRef, {
       productDiscount: product.discount,
       productImage: product.image,
       productName: product.name,
-      productOldPrice: product.oldPrice,
-      productPrice: product.price,
+      productOldPrice: oldPrice,
+      productPrice: price,
       productSubtitle: product.subtitle,
     });
   });
@@ -197,10 +202,15 @@ async function saveLIDLProductsToFirestore(products: any[]) {
   const batch = db.batch();
   products.forEach((product) => {
     const productRef = db.collection("productsLidl").doc(); // Automatikus ID
+
+    // ar converalasa double-re
+    const price = parseFloat(product.price.replace(',', '.')) || 0;
+    const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
+
     batch.set(productRef, {
       productName: product.name,
-      productPrice: product.price,
-      productOldPrice: product.oldPrice,
+      productPrice: price,
+      productOldPrice: oldPrice,
       productDiscount: product.discount,
       productImage: product.image,
     });

@@ -17,35 +17,75 @@ class KauflandItemInfo extends StatelessWidget {
             top: 0,
             child: IconButton(
               icon: Icon(Icons.close),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.network(product.productImage, height: 150, width: 150),
-              Text(product.productName, style: TextStyle(fontSize: 20)),
-              Text(product.productPrice,
-                  style: TextStyle(fontSize: 18)), // Stringként jelenítjük meg
-              if (product.productDiscount != null)
-                Text('Discount: ${product.productDiscount}',
-                    style: TextStyle(fontSize: 16)),
-              if (product.productOldPrice != null)
-                Text('Old Price: ${product.productOldPrice}',
-                    style: TextStyle(fontSize: 16)),
-              if (product.productSubtitle != null)
-                Text('Subtitle: ${product.productSubtitle}',
-                    style: TextStyle(fontSize: 16)),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  // TODO:
-                },
-                child: Text('Add to Grocery List'),
-              ),
-            ],
+          SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (product.productImage != null)
+                  Image.network(
+                    product.productImage!,
+                    height: 150,
+                    width: 150,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.image_not_supported, size: 80),
+                  ),
+                if (product.productName != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      product.productName!,
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                if (product.productPrice != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Price: ${product.productPrice!.toStringAsFixed(2)}',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                if (product.productOldPrice != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Old Price: ${product.productOldPrice!.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        decoration: TextDecoration.lineThrough,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                if (product.productDiscount != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Discount: ${product.productDiscount}',
+                      style: TextStyle(fontSize: 16, color: Colors.green),
+                    ),
+                  ),
+                if (product.productSubtitle != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      product.productSubtitle!,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // TODO: Add to grocery list implementation
+                  },
+                  child: Text('Add to Grocery List'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
