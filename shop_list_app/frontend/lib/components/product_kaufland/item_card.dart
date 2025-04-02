@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../models/product_model.dart';
 
-class KauflandItemCard extends StatelessWidget {
+class ItemCard extends StatelessWidget {
   final Product product;
 
-  const KauflandItemCard({super.key, required this.product});
+  const ItemCard({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.grey[100],
+      color: Colors.white,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

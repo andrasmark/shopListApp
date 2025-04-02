@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../models/product_model.dart';
 
-class KauflandItemInfo extends StatelessWidget {
+class ItemInfo extends StatelessWidget {
   final Product product;
 
-  const KauflandItemInfo({super.key, required this.product});
+  const ItemInfo({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {

@@ -158,11 +158,11 @@ class _ItemsPageState extends State<ItemsPage> {
                             showDialog(
                               context: context,
                               builder: (BuildContext context) {
-                                return KauflandItemInfo(product: product);
+                                return ItemInfo(product: product);
                               },
                             );
                           },
-                          child: KauflandItemCard(product: product),
+                          child: ItemCard(product: product),
                         );
                       },
                     );

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../components/product_kaufland/item_card.dart';
+import '../components/product_kaufland/item_info.dart';
+import '../models/product_model.dart';
+import '../services/groceryLists_service.dart';
+
 class GroceryListPage extends StatelessWidget {
   final String listId;
+  final GrocerylistService _groceryListService = GrocerylistService();
 
-  const GroceryListPage({super.key, required this.listId});
+  GroceryListPage({super.key, required this.listId});
 
   @override
   Widget build(BuildContext context) {
@@ -11,9 +17,52 @@ class GroceryListPage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Grocery List"),
       ),
-      body: Center(
-        child: Text("Details for list: $listId"),
-        // Itt jelenítsd meg a lista termékeit (pl. egy ListView.builder-rel)
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Text("Details for list: $listId"),
+            Expanded(
+              child: StreamBuilder<List<Product>>(
+                stream: _groceryListService.getItemsFromList(listId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No items in this list yet'));
+                  } else {
+                    return GridView.builder(
+                      padding: EdgeInsets.all(8.0),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        final product = snapshot.data![index];
+                        return GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return ItemInfo(product: product);
+                              },
+                            );
+                          },
+                          child: ItemCard(product: product),
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
