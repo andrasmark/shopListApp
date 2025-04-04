@@ -11,21 +11,20 @@ class GrocerylistService {
         .doc(listId)
         .snapshots()
         .asyncMap((listDoc) async {
-      // 1. Lekérjük a termék ID-kat a listából
-      final productIds =
-          (listDoc.data()?['products'] as List<dynamic>?)?.cast<String>() ?? [];
+      final productsMap =
+          (listDoc.data()?['products'] as Map<String, dynamic>?) ?? {};
 
-      if (productIds.isEmpty) {
+      if (productsMap.isEmpty) {
         return <Product>[];
       }
 
-      // 2. Lekérjük a tényleges termékeket a productsKaufland collection-ből
+      final productIds = productsMap.keys.toList();
+
       final products = await _db
           .collection('productsKaufland')
           .where(FieldPath.documentId, whereIn: productIds)
           .get();
 
-      // 3. Átalakítjuk Product objektumokká
       return products.docs.map((doc) {
         final data = doc.data();
         return Product(
@@ -36,6 +35,7 @@ class GrocerylistService {
           productOldPrice: _parseDouble(data['productOldPrice']),
           productDiscount: data['productDiscount'],
           productSubtitle: data['productSubtitle'],
+          // quantity: productsMap[doc.id]?['quantity'] ?? 1,
         );
       }).toList();
     });

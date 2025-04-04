@@ -11,6 +11,7 @@ class ItemInfo extends StatelessWidget {
   final UserService _userService = UserService();
   final ProductService _productService = ProductService();
   final AuthService _authService = AuthService();
+  int _quantity = 1;
 
   ItemInfo({super.key, required this.product});
 
@@ -19,6 +20,7 @@ class ItemInfo extends StatelessWidget {
       await _productService.addProductToList(
         listId: listId,
         productId: product.productUID!,
+        quantity: _quantity,
         productName: product.productName!,
         productImage: product.productImage,
         price: product.productPrice,
@@ -26,13 +28,13 @@ class ItemInfo extends StatelessWidget {
         discount: product.productDiscount,
         subtitle: product.productSubtitle,
       );
-      Navigator.pop(context); // Bezárjuk a listaválasztó dialógust
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Termék hozzáadva a listához')),
+        SnackBar(content: Text('$_quantity db termék hozzáadva')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hiba történt: ${e.toString()}')),
+        SnackBar(content: Text('Hiba: ${e.toString()}')),
       );
     }
   }
@@ -40,60 +42,67 @@ class ItemInfo extends StatelessWidget {
   void _showListSelectionDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => FutureBuilder<List<Map<String, dynamic>>>(
-        future: _userService.getUserGroceryLists(
-            _authService.getUserId()), // TODO: Jelenlegi user ID beillesztése
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return AlertDialog(
-              title: Text('Listák betöltése...'),
-              content: CircularProgressIndicator(),
-            );
-          }
-
-          if (snapshot.hasError || !snapshot.hasData) {
-            return AlertDialog(
-              title: Text('Hiba'),
-              content: Text('Nem sikerült betölteni a listákat'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          }
-
-          final lists = snapshot.data!;
-          if (lists.isEmpty) {
-            return AlertDialog(
-              title: Text('Nincsenek listák'),
-              content: Text('Először hozz létre egy bevásárlólistát'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          }
-
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
           return AlertDialog(
-            title: Text('Válassz listát'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: lists.length,
-                itemBuilder: (context, index) {
-                  final list = lists[index];
-                  return ListTile(
-                    title: Text(list['listName'] ?? 'Névtelen lista'),
-                    onTap: () => _addToGroceryList(context, list['id']),
-                  );
-                },
-              ),
+            title: Text('Termék hozzáadása'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Mennyiség:'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.remove),
+                      onPressed: () {
+                        if (_quantity > 1) {
+                          setState(() => _quantity--);
+                        }
+                      },
+                    ),
+                    Text('$_quantity', style: TextStyle(fontSize: 20)),
+                    IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: () => setState(() => _quantity++),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _userService
+                      .getUserGroceryLists(_authService.getUserId()),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    }
+                    if (snapshot.hasError || !snapshot.hasData) {
+                      return Text('Hiba a listák betöltésében');
+                    }
+                    final lists = snapshot.data!;
+                    if (lists.isEmpty) {
+                      return Text('Nincs elérhető lista');
+                    }
+                    return Column(
+                      children: lists
+                          .map((list) => ListTile(
+                                title:
+                                    Text(list['listName'] ?? 'Névtelen lista'),
+                                onTap: () =>
+                                    _addToGroceryList(context, list['id']),
+                              ))
+                          .toList(),
+                    );
+                  },
+                ),
+              ],
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Mégse'),
+              ),
+            ],
           );
         },
       ),

@@ -8,6 +8,7 @@ class ProductService {
   Future<void> addProductToList({
     required String listId,
     required String productId,
+    required int quantity,
     required String productName,
     String? productImage,
     double? price,
@@ -16,9 +17,13 @@ class ProductService {
     String? subtitle,
   }) async {
     await _db.collection('groceryLists').doc(listId).update({
-      'products': FieldValue.arrayUnion([productId]),
+      'products.$productId': FieldValue.increment(quantity),
       'lastUpdated': FieldValue.serverTimestamp(),
     });
+    // await _db.collection('groceryLists').doc(listId).update({
+    //   'products': FieldValue.arrayUnion([productId]),
+    //   'lastUpdated': FieldValue.serverTimestamp(),
+    // });
 
     // Opcionális: termék adatainak mentése a listához kapcsolódóan
     await _db
