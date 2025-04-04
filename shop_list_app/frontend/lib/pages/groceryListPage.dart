@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../components/product/item_card.dart';
-import '../components/product/item_info.dart';
+import '../components/groceryListItem/groceryListItemCard.dart';
 import '../models/product_model.dart';
 import '../services/groceryLists_service.dart';
 
@@ -34,30 +33,23 @@ class GroceryListPage extends StatelessWidget {
                     return Center(child: Text('No items in this list yet'));
                   } else {
                     return GridView.builder(
-                      padding: EdgeInsets.all(8.0),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.8,
                       ),
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         final product = snapshot.data![index];
-                        return GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return ItemInfo(product: product);
-                              },
-                            );
-                          },
-                          child: ItemCard(product: product),
+                        return GroceryListItemCard(
+                          product: product,
+                          listId: listId,
+                          groceryService: _groceryListService,
                         );
                       },
                     );
                   }
+                  return const CircularProgressIndicator();
                 },
               ),
             ),
