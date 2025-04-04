@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shop_list_app/pages/home_page.dart';
 
 import '../components/nav_bar.dart';
-import '../components/product_kaufland/item_card.dart';
-import '../components/product_kaufland/item_info.dart';
+import '../components/product/item_card.dart';
+import '../components/product/item_info.dart';
 import '../constants/color_scheme.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';

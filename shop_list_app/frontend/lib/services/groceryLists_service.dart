@@ -5,45 +5,40 @@ import '../models/product_model.dart';
 class GrocerylistService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Stream<List<Product>> getItemsFromList(String listId) {
-  //   return _db.collection('groceryLists').doc(listId).snapshots().asyncMap((listDoc) async {
-  //     final productIds = (listDoc.data()?['products'] as List<dynamic>?)?.cast<String>() ?? [];
-  //     if (productIds.isEmpty) return <Product>[];
-  //
-  //     final products = await _db.collection('productsKaufland')
-  //         .where(FieldPath.documentId, whereIn: productIds)
-  //         .get();
-  //
-  //     return products.docs.map((doc) => Product.fromFirestore(doc)).toList();
-  //   });
-  // }
-
-  Stream<List<Product>> getItemsFromList(String listId) async* {
-    final listDoc = await _db.collection('groceryLists').doc(listId).get();
-    final productIds =
-        (listDoc.data()?['products'] as List<dynamic>?)?.cast<String>() ?? [];
-
-    if (productIds.isEmpty) {
-      yield [];
-      return;
-    }
-
-    yield* _db
-        .collection('productsKaufland')
-        .where(FieldPath.documentId, whereIn: productIds)
+  Stream<List<Product>> getItemsFromList(String listId) {
+    return _db
+        .collection('groceryLists')
+        .doc(listId)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-              final data = doc.data();
-              return Product(
-                productUID: doc.id,
-                productName: data['productName'],
-                productImage: data['productImage'],
-                productPrice: _parseDouble(data['productPrice']),
-                productOldPrice: _parseDouble(data['productOldPrice']),
-                productDiscount: data['productDiscount'],
-                productSubtitle: data['productSubtitle'],
-              );
-            }).toList());
+        .asyncMap((listDoc) async {
+      // 1. Lekérjük a termék ID-kat a listából
+      final productIds =
+          (listDoc.data()?['products'] as List<dynamic>?)?.cast<String>() ?? [];
+
+      if (productIds.isEmpty) {
+        return <Product>[];
+      }
+
+      // 2. Lekérjük a tényleges termékeket a productsKaufland collection-ből
+      final products = await _db
+          .collection('productsKaufland')
+          .where(FieldPath.documentId, whereIn: productIds)
+          .get();
+
+      // 3. Átalakítjuk Product objektumokká
+      return products.docs.map((doc) {
+        final data = doc.data();
+        return Product(
+          productUID: doc.id,
+          productName: data['productName'] ?? 'Névtelen termék',
+          productImage: data['productImage'] ?? '',
+          productPrice: _parseDouble(data['productPrice']),
+          productOldPrice: _parseDouble(data['productOldPrice']),
+          productDiscount: data['productDiscount'],
+          productSubtitle: data['productSubtitle'],
+        );
+      }).toList();
+    });
   }
 
   double? _parseDouble(dynamic value) {
@@ -66,3 +61,46 @@ class GrocerylistService {
         .delete();
   }
 }
+
+//ezeket meg lehet hogy fel lehet hasznalni
+
+// Stream<List<Product>> getItemsFromList(String listId) {
+//   return _db.collection('groceryLists').doc(listId).snapshots().asyncMap((listDoc) async {
+//     final productIds = (listDoc.data()?['products'] as List<dynamic>?)?.cast<String>() ?? [];
+//     if (productIds.isEmpty) return <Product>[];
+//
+//     final products = await _db.collection('productsKaufland')
+//         .where(FieldPath.documentId, whereIn: productIds)
+//         .get();
+//
+//     return products.docs.map((doc) => Product.fromFirestore(doc)).toList();
+//   });
+// }
+
+// Stream<List<Product>> getItemsFromList2(String listId) async* {
+//   final listDoc = await _db.collection('groceryLists').doc(listId).get();
+//   final productIds =
+//       (listDoc.data()?['products'] as List<dynamic>?)?.cast<String>() ?? [];
+//
+//   if (productIds.isEmpty) {
+//     yield [];
+//     return;
+//   }
+//
+//   yield* _db
+//       .collection('productsKaufland')
+//       .where(FieldPath.documentId, whereIn: productIds)
+//       .snapshots()
+//       .map((snapshot) => snapshot.docs.map((doc) {
+//     final data = doc.data();
+//     return Product(
+//       productUID: doc.id,
+//       productName: data['productName'],
+//       productImage: data['productImage'],
+//       productPrice: _parseDouble(data['productPrice']),
+//       productOldPrice: _parseDouble(data['productOldPrice']),
+//       productDiscount: data['productDiscount'],
+//       productSubtitle: data['productSubtitle'],
+//     );
+//   }).toList());
+// }

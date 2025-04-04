@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../components/product_kaufland/item_card.dart';
-import '../components/product_kaufland/item_info.dart';
+import '../components/product/item_card.dart';
+import '../components/product/item_info.dart';
 import '../models/product_model.dart';
 import '../services/groceryLists_service.dart';
 

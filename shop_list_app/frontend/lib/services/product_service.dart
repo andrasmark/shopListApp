@@ -4,20 +4,39 @@ import '../models/product_model.dart';
 
 class ProductService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  // Stream<List<Product>> getProducts() {
-  //   return _db
-  //       .collection("products")
-  //       .snapshots()
-  //       .map((snapshot) => snapshot.docs.map((doc) {
-  //             final data = doc.data();
-  //             return Product(
-  //               doc.id,
-  //               data['productName'] ?? '',
-  //               data['productImage'] ?? '',
-  //               (data['productPrice'] ?? 0).toDouble(),
-  //             );
-  //           }).toList());
-  // }
+
+  Future<void> addProductToList({
+    required String listId,
+    required String productId,
+    required String productName,
+    String? productImage,
+    double? price,
+    double? oldPrice,
+    String? discount,
+    String? subtitle,
+  }) async {
+    await _db.collection('groceryLists').doc(listId).update({
+      'products': FieldValue.arrayUnion([productId]),
+      'lastUpdated': FieldValue.serverTimestamp(),
+    });
+
+    // Opcionális: termék adatainak mentése a listához kapcsolódóan
+    await _db
+        .collection('groceryLists')
+        .doc(listId)
+        .collection('items')
+        .doc(productId)
+        .set({
+      'productId': productId,
+      'name': productName,
+      'image': productImage,
+      'price': price,
+      'oldPrice': oldPrice,
+      'discount': discount,
+      'subtitle': subtitle
+      //'addedAt': FieldValue.serverTimestamp(),
+    });
+  }
 
   Stream<List<Product>> getProductsFromKaufland() {
     return _db.collection("productsKaufland").snapshots().map((snapshot) {
@@ -64,3 +83,18 @@ class ProductService {
     return null;
   }
 }
+
+// Stream<List<Product>> getProducts() {
+//   return _db
+//       .collection("products")
+//       .snapshots()
+//       .map((snapshot) => snapshot.docs.map((doc) {
+//             final data = doc.data();
+//             return Product(
+//               doc.id,
+//               data['productName'] ?? '',
+//               data['productImage'] ?? '',
+//               (data['productPrice'] ?? 0).toDouble(),
+//             );
+//           }).toList());
+// }
