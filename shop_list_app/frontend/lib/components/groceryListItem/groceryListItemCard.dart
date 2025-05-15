@@ -7,12 +7,14 @@ class GroceryListItemCard extends StatefulWidget {
   final Product product;
   final String listId;
   final GrocerylistService groceryService;
+  final VoidCallback onQuantityChanged;
 
   const GroceryListItemCard({
     super.key,
     required this.product,
     required this.listId,
     required this.groceryService,
+    required this.onQuantityChanged,
   });
 
   @override
@@ -40,6 +42,7 @@ class _GroceryListItemCardState extends State<GroceryListItemCard> {
         widget.product.productUID!,
         newQuantity,
       );
+      widget.onQuantityChanged();
       setState(() {
         _quantityFuture = Future.value(newQuantity);
       });
