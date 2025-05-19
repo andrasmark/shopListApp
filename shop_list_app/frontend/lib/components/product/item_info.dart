@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shop_list_app/services/authorization.dart';
 
@@ -16,6 +17,13 @@ class ItemInfo extends StatelessWidget {
   ItemInfo({super.key, required this.product});
 
   Future<void> _addToGroceryList(BuildContext context, String listId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You are not logged in!')),
+      );
+      return;
+    }
     try {
       await _productService.addProductToList(
         listId: listId,
@@ -27,6 +35,7 @@ class ItemInfo extends StatelessWidget {
         oldPrice: product.productOldPrice,
         discount: product.productDiscount,
         subtitle: product.productSubtitle,
+        userId: userId,
       );
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(

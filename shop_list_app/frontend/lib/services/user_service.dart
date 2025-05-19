@@ -14,6 +14,16 @@ class UserService {
     });
   }
 
+  Future<String?> getUserName(String userId) async {
+    try {
+      final doc = await _db.collection('users').doc(userId).get();
+      return doc.data()?['userName'];
+    } catch (e) {
+      print('Error fetching user name: $e');
+      return null;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getUserGroceryLists(String? userId) async {
     try {
       print('Fetching user document for userId: $userId');

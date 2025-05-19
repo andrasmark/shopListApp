@@ -6,6 +6,66 @@ import '../models/product_model.dart';
 class GrocerylistService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  Future<void> deleteItemFromGroceryList(
+      String listId, String productId) async {
+    try {
+      // Delete from the main products map
+      await _db.collection('groceryLists').doc(listId).set({
+        'products': {
+          productId: FieldValue.delete(),
+        }
+      }, SetOptions(merge: true));
+
+      // Delete from the items subcollection
+      await _db
+          .collection('groceryLists')
+          .doc(listId)
+          .collection('items')
+          .doc(productId)
+          .delete();
+    } catch (e) {
+      debugPrint("Error deleting item: $e");
+      rethrow;
+    }
+  }
+
+  Future<String?> getUserNameWhoAddedProduct(
+      String listId, String? productId) async {
+    try {
+      final listDoc = await _db.collection('groceryLists').doc(listId).get();
+      if (!listDoc.exists) return null;
+
+      final productsMap =
+          listDoc.data()?['products'] as Map<String, dynamic>? ?? {};
+      final productEntry = productsMap[productId] as Map<String, dynamic>?;
+
+      final userId = productEntry?['addedBy'];
+      if (userId == null) return null;
+
+      final userDoc = await _db.collection('users').doc(userId).get();
+      return userDoc.data()?['userName'];
+    } catch (e) {
+      debugPrint("Error getting user who added product: $e");
+      return null;
+    }
+  }
+
+  Future<String?> getStoreForProduct(String? productId) async {
+    try {
+      final kauflandDoc =
+          await _db.collection('productsKaufland').doc(productId).get();
+      if (kauflandDoc.exists) return "Kaufland";
+
+      final lidlDoc = await _db.collection('productsLidl').doc(productId).get();
+      if (lidlDoc.exists) return "Lidl";
+
+      return null; // Product not found in either collection
+    } catch (e) {
+      debugPrint("Error getting store for product: $e");
+      return null;
+    }
+  }
+
   Future<double> calculateTotalPrice(String listId) async {
     try {
       // 1. Get the list document

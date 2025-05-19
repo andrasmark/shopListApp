@@ -83,6 +83,11 @@ class _GroceryListPageState extends State<GroceryListPage> {
                             listId: widget.listId,
                             groceryService: _groceryListService,
                             onQuantityChanged: _updateTotalPrice,
+                            addedBy:
+                                _groceryListService.getUserNameWhoAddedProduct(
+                                    widget.listId, product.productUID),
+                            store: _groceryListService
+                                .getStoreForProduct(product.productUID),
                           );
                         },
                       );

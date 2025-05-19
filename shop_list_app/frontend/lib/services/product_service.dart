@@ -10,6 +10,7 @@ class ProductService {
     required String productId,
     required int quantity,
     required String productName,
+    required String userId,
     String? productImage,
     double? price,
     double? oldPrice,
@@ -21,14 +22,15 @@ class ProductService {
       'products': {
         productId: {
           'quantity': quantity,
+          'addedBy': userId,
         }
       }
     }, SetOptions(merge: true));
 
     // Update last modified timestamp
-    await _db.collection('groceryLists').doc(listId).update({
-      'lastUpdated': FieldValue.serverTimestamp(),
-    });
+    // await _db.collection('groceryLists').doc(listId).update({
+    //   'lastUpdated': FieldValue.serverTimestamp(),
+    // });
 
     // Store detailed product info in subcollection
     await _db
@@ -44,7 +46,8 @@ class ProductService {
       'oldPrice': oldPrice,
       'discount': discount,
       'subtitle': subtitle,
-      'quantity': quantity, // Keep quantity here too for consistency
+      'quantity': quantity,
+      'addedBy': userId,
       'addedAt': FieldValue.serverTimestamp(),
     });
   }
