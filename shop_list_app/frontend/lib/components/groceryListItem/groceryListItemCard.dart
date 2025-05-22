@@ -167,7 +167,7 @@ class _GroceryListItemCardState extends State<GroceryListItemCard> {
                             // Ár
                             if (widget.product.productPrice != null)
                               Text(
-                                '${widget.product.productPrice!.toStringAsFixed(2)} Ft',
+                                '${widget.product.productPrice!.toStringAsFixed(2)} Ron',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold),
                               ),

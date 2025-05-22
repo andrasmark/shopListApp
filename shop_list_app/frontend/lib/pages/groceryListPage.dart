@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shop_list_app/constants/color_scheme.dart';
 
 import '../components/groceryListItem/groceryListItemCard.dart';
 import '../models/product_model.dart';
@@ -18,6 +20,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
   double _totalPrice = 0.0;
   List<Product> _currentProducts = [];
   bool _isInitialLoad = true;
+  bool isFavourite = false;
 
   Future<void> _updateTotalPrice() async {
     final total = await _groceryListService.calculateTotalPrice(widget.listId);
@@ -33,6 +36,33 @@ class _GroceryListPageState extends State<GroceryListPage> {
     super.initState();
     // Load initial price immediately
     _updateTotalPrice();
+    _loadFavouriteStatus();
+  }
+
+  Future<void> _loadFavouriteStatus() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .doc(widget.listId)
+        .get();
+
+    if (doc.exists) {
+      setState(() {
+        isFavourite = doc.data()?['favourite'] ?? false;
+      });
+    }
+  }
+
+  Future<void> _toggleFavourite() async {
+    final newValue = !isFavourite;
+
+    await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .doc(widget.listId)
+        .update({'favourite': newValue});
+
+    setState(() {
+      isFavourite = newValue;
+    });
   }
 
   @override
@@ -97,23 +127,69 @@ class _GroceryListPageState extends State<GroceryListPage> {
               ),
             ),
             // Total price container
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Total:",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text("${_totalPrice.toStringAsFixed(2)} Ron",
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  width: 220,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: COLOR_BEIGE,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      const Text("Total:",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text("${_totalPrice.toStringAsFixed(2)} Ron",
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  width: 200,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: COLOR_BEIGE,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.notifications_none),
+                        onPressed: () {
+                          // TODO: Add your notification logic
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          isFavourite ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.black,
+                        ),
+                        onPressed: _toggleFavourite,
+                      )
+                      // IconButton(
+                      //   icon: const Icon(Icons.map_outlined),
+                      //   onPressed: () {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(builder: (context) => MapPage()),
+                      //     );
+                      //   },
+                      // ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),

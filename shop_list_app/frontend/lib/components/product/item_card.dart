@@ -29,7 +29,7 @@ class ItemCard extends StatelessWidget {
             ),
           if (product.productPrice != null)
             Text(
-              '${product.productPrice!.toStringAsFixed(2)}',
+              '${product.productPrice!.toStringAsFixed(2)} Ron',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           if (product.productDiscount != null)
