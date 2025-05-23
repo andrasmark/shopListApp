@@ -25,6 +25,8 @@ dev_dependencies:
   modal_progress_hud_nsn: ^0.5.0
   carousel_slider: ^5.0.0
 
+  flutter_local_notifications: ^16.3.2
+
 #  google_maps_flutter: ^2.5.0
 #  geolocator: ^11.0.0
 ##  google_maps_webservice: ^0.0.19

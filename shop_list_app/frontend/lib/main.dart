@@ -6,10 +6,12 @@ import 'package:shop_list_app/pages/home_page.dart';
 import 'package:shop_list_app/pages/items_page.dart';
 import 'package:shop_list_app/pages/list_page.dart';
 import 'package:shop_list_app/pages/splash_page.dart';
+import 'package:shop_list_app/services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await NotificationService().init();
   runApp(const MyApp());
 }
 

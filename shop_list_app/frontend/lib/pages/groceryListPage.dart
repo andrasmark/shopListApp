@@ -5,6 +5,7 @@ import 'package:shop_list_app/constants/color_scheme.dart';
 import '../components/groceryListItem/groceryListItemCard.dart';
 import '../models/product_model.dart';
 import '../services/groceryLists_service.dart';
+import '../services/notification_service.dart';
 
 class GroceryListPage extends StatefulWidget {
   final String listId;
@@ -21,6 +22,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
   List<Product> _currentProducts = [];
   bool _isInitialLoad = true;
   bool isFavourite = false;
+  Timestamp? _reminder;
 
   Future<void> _updateTotalPrice() async {
     final total = await _groceryListService.calculateTotalPrice(widget.listId);
@@ -37,6 +39,81 @@ class _GroceryListPageState extends State<GroceryListPage> {
     // Load initial price immediately
     _updateTotalPrice();
     _loadFavouriteStatus();
+    _fetchReminder();
+  }
+
+  Future<void> _fetchReminder() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .doc(widget.listId)
+        .get();
+
+    final data = doc.data();
+    if (data != null && data['reminder'] != null) {
+      setState(() {
+        _reminder = data['reminder'];
+      });
+    }
+  }
+
+  Future<void> _scheduleNotificationIfNeeded() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .doc(widget.listId)
+        .get();
+
+    final data = doc.data();
+    if (data == null || data['reminder'] == null) return;
+
+    final Timestamp reminderTime = data['reminder'];
+    await NotificationService().scheduleReminder(
+      listId: widget.listId,
+      reminderTime: reminderTime,
+    );
+  }
+
+  Future<void> _pickReminderDateTime(BuildContext context) async {
+    final DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (date == null) return;
+
+    final TimeOfDay? time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (time == null) return;
+
+    final DateTime combined = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+
+    final Timestamp reminderTimestamp = Timestamp.fromDate(combined);
+
+    // Frissítés Firestore-ban
+    await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .doc(widget.listId)
+        .update({'reminder': reminderTimestamp});
+
+    // Lokális értesítés ütemezése
+    await NotificationService().scheduleReminder(
+      listId: widget.listId,
+      reminderTime: reminderTimestamp,
+    );
+
+    setState(() {
+      _reminder = reminderTimestamp;
+    });
   }
 
   Future<void> _loadFavouriteStatus() async {
@@ -165,11 +242,24 @@ class _GroceryListPageState extends State<GroceryListPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.notifications_none),
-                        onPressed: () {
-                          // TODO: Add your notification logic
-                        },
+                        icon: Icon(
+                          _reminder != null &&
+                                  _reminder!.toDate().isAfter(DateTime.now())
+                              ? Icons.notifications_active
+                              : Icons.notifications_none,
+                          color: Colors.black,
+                        ),
+                        // onPressed: () async {
+                        //   await NotificationService.showTestNotification();
+                        // },
+                        onPressed: () => _pickReminderDateTime(context),
                       ),
+                      // IconButton(
+                      //   icon: const Icon(Icons.notifications_none),
+                      //   onPressed: () {
+                      //     // TODO: Add your notification logic
+                      //   },
+                      // ),
                       IconButton(
                         icon: Icon(
                           isFavourite ? Icons.favorite : Icons.favorite_border,
