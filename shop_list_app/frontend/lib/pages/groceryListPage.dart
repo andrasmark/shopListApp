@@ -165,7 +165,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Válassz kategóriát'),
+          title: const Text('Choose category'),
           content: StatefulBuilder(
             builder: (context, setState) {
               return DropdownButton<String?>(
@@ -173,11 +173,11 @@ class _GroceryListPageState extends State<GroceryListPage> {
                 value: categories.contains(selectedCategory)
                     ? selectedCategory
                     : null,
-                hint: const Text("Nincs kategória"),
+                hint: const Text("No category yet"),
                 items: [
                   const DropdownMenuItem<String?>(
                     value: null,
-                    child: Text("Nincs kategória"),
+                    child: Text("No category yet"),
                   ),
                   ...categories.map((cat) => DropdownMenuItem<String?>(
                         value: cat,
@@ -274,6 +274,9 @@ class _GroceryListPageState extends State<GroceryListPage> {
                                       widget.listId, product.productUID),
                               store: _groceryListService
                                   .getStoreForProduct(product.productUID),
+                              category:
+                                  _productService.getCurrentCategoryForItem(
+                                      widget.listId, product.productUID),
                             ),
                           );
                         },

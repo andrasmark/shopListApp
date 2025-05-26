@@ -25,6 +25,7 @@ class _HomePageState extends State<HomePage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
+  GrocerylistService _grocerylistService = GrocerylistService();
 
   @override
   void initState() {
@@ -44,6 +45,27 @@ class _HomePageState extends State<HomePage> {
           break;
       }
     });
+  }
+
+  IconData getCategoryIcon(String? category) {
+    switch (category) {
+      case 'Meat':
+        return Icons.set_meal;
+      case 'Fruit':
+        return Icons.apple;
+      case 'Vegetable':
+        return Icons.energy_savings_leaf;
+      case 'Cleaning':
+        return Icons.cleaning_services;
+      case 'Drink':
+        return Icons.local_drink;
+      case 'Snack':
+        return Icons.fastfood;
+      case 'Food':
+        return Icons.restaurant;
+      default:
+        return Icons.category;
+    }
   }
 
   Future<void> _loadReminders() async {
@@ -183,6 +205,39 @@ class _HomePageState extends State<HomePage> {
               SizedBox(
                 height: 20,
               ),
+              // FutureBuilder<Map<String, double>>(
+              //   future: _grocerylistService
+              //       .getMonthlySpendingPerCategoryFromReminders(
+              //           FirebaseAuth.instance.currentUser!.uid),
+              //   builder: (context, snapshot) {
+              //     if (snapshot.connectionState == ConnectionState.waiting) {
+              //       return const CircularProgressIndicator();
+              //     }
+              //
+              //     final data = snapshot.data ?? {};
+              //     if (data.isEmpty) {
+              //       return const Text("Ebben a hónapban még nincs költés.");
+              //     }
+              //
+              //     return Column(
+              //       crossAxisAlignment: CrossAxisAlignment.start,
+              //       children: [
+              //         const Text(
+              //           'Költés kategóriánként (ebben a hónapban):',
+              //           style: TextStyle(
+              //               fontWeight: FontWeight.bold, fontSize: 16),
+              //         ),
+              //         const SizedBox(height: 8),
+              //         ...data.entries.map((entry) => ListTile(
+              //               leading: Icon(getCategoryIcon(entry.key)),
+              //               title: Text(entry.key),
+              //               trailing:
+              //                   Text('${entry.value.toStringAsFixed(2)} RON'),
+              //             )),
+              //       ],
+              //     );
+              //   },
+              // )
             ],
           ),
         ),

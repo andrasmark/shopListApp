@@ -9,6 +9,78 @@ class GrocerylistService {
   // final CollectionReference groceryLists =
   //     FirebaseFirestore.instance.collection('groceryLists');
 
+  Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
+      String userId) async {
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+
+    final firestore = FirebaseFirestore.instance;
+
+    // Csak azokat a groceryList-okat kérjük le, ahol reminder ebben a hónapban van
+    final querySnapshot = await firestore
+        .collection('groceryLists')
+        .where('reminder',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
+        .where('reminder',
+            isLessThanOrEqualTo: Timestamp.fromDate(lastDayOfMonth))
+        .get();
+
+    Map<String, double> categoryTotals = {};
+
+    for (var doc in querySnapshot.docs) {
+      final itemsRef = doc.reference.collection('items');
+      final itemsSnapshot = await itemsRef
+          .where('addedBy',
+              isEqualTo: userId) // csak az adott user által hozzáadott elemek
+          .get();
+
+      for (var itemDoc in itemsSnapshot.docs) {
+        final data = itemDoc.data();
+        final quantity = (data['quantity'] ?? 1) as int;
+        final price = (data['productPrice'] ?? 0.0) as num;
+        final category = data['category'] ?? 'Other';
+
+        final total = price * quantity;
+        categoryTotals[category] = (categoryTotals[category] ?? 0) + total;
+      }
+    }
+
+    return categoryTotals;
+  }
+
+  // Future<Map<String, double>> getMonthlySpendingPerCategory(
+  //     String userId) async {
+  //   final now = DateTime.now();
+  //   final firstDayOfMonth = DateTime(now.year, now.month, 1);
+  //   final firestore = FirebaseFirestore.instance;
+  //
+  //   final querySnapshot = await firestore.collection('groceryLists').get();
+  //
+  //   Map<String, double> categoryTotals = {};
+  //
+  //   for (var doc in querySnapshot.docs) {
+  //     final itemsRef = doc.reference.collection('items');
+  //     final itemsSnapshot = await itemsRef
+  //         .where('addedBy', isEqualTo: userId)
+  //         .where('addedAt',
+  //             isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
+  //         .get();
+  //
+  //     for (var itemDoc in itemsSnapshot.docs) {
+  //       final data = itemDoc.data();
+  //       final quantity = data['quantity'] ?? 1;
+  //       final price = data['productPrice'] ?? 0.0;
+  //       final category = data['category'] ?? 'Other';
+  //
+  //       final total = price * quantity;
+  //       categoryTotals[category] = (categoryTotals[category] ?? 0) + total;
+  //     }
+  //   }
+  //
+  //   return categoryTotals;
+  // }
+
   Future<void> createNewList(String listName) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;

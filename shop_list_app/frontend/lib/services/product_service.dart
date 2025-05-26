@@ -6,7 +6,7 @@ class ProductService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   Future<String?> getCurrentCategoryForItem(
-      String listId, String itemId) async {
+      String listId, String? itemId) async {
     final doc = await FirebaseFirestore.instance
         .collection('groceryLists')
         .doc(listId)
