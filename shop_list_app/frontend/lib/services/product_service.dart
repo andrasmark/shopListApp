@@ -5,6 +5,47 @@ import '../models/product_model.dart';
 class ProductService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  Future<String?> getCurrentCategoryForItem(
+      String listId, String itemId) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .doc(listId)
+        .get();
+
+    if (!doc.exists) return null;
+
+    final data = doc.data();
+    if (data == null) return null;
+
+    final products = data['products'] as Map<String, dynamic>?; // MAP, nem LIST
+
+    if (products == null) return null;
+
+    final productData = products[itemId] as Map<String, dynamic>?;
+
+    if (productData == null) return null;
+
+    return productData['category'] as String?;
+  }
+
+  Future<void> updateProductCategory({
+    required String listId,
+    required String itemId,
+    required String? newCategory,
+  }) async {
+    final docRef =
+        FirebaseFirestore.instance.collection('groceryLists').doc(listId);
+
+    try {
+      await docRef.update({
+        'products.$itemId.category': newCategory, // lehet null is
+      });
+      print("Category updated successfully.");
+    } catch (e) {
+      print("Error updating category: $e");
+    }
+  }
+
   Future<void> addProductToList({
     required String listId,
     required String productId,

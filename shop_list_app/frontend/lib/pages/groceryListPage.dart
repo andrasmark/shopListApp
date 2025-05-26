@@ -6,6 +6,7 @@ import '../components/groceryListItem/groceryListItemCard.dart';
 import '../models/product_model.dart';
 import '../services/groceryLists_service.dart';
 import '../services/notification_service.dart';
+import '../services/product_service.dart';
 
 class GroceryListPage extends StatefulWidget {
   final String listId;
@@ -18,6 +19,7 @@ class GroceryListPage extends StatefulWidget {
 
 class _GroceryListPageState extends State<GroceryListPage> {
   final GrocerylistService _groceryListService = GrocerylistService();
+  final ProductService _productService = ProductService();
   double _totalPrice = 0.0;
   List<Product> _currentProducts = [];
   bool _isInitialLoad = true;
@@ -142,6 +144,78 @@ class _GroceryListPageState extends State<GroceryListPage> {
     });
   }
 
+  void _showCategoryDialog(
+      BuildContext context, String listId, String itemId) async {
+    final currentCategory =
+        await _productService.getCurrentCategoryForItem(listId, itemId);
+
+    final categories = [
+      'Meat',
+      'Fruit',
+      'Vegetable',
+      'Cleaning',
+      'Drink',
+      'Snack',
+      'Food',
+      'Other'
+    ];
+    String? selectedCategory = currentCategory;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Válassz kategóriát'),
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return DropdownButton<String?>(
+                isExpanded: true,
+                value: categories.contains(selectedCategory)
+                    ? selectedCategory
+                    : null,
+                hint: const Text("Nincs kategória"),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text("Nincs kategória"),
+                  ),
+                  ...categories.map((cat) => DropdownMenuItem<String?>(
+                        value: cat,
+                        child: Text(cat),
+                      )),
+                ],
+                onChanged: (val) {
+                  setState(() {
+                    selectedCategory = val;
+                  });
+                },
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (selectedCategory != currentCategory) {
+                  await _productService.updateProductCategory(
+                    listId: listId,
+                    itemId: itemId,
+                    newCategory: selectedCategory,
+                  );
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,18 +257,24 @@ class _GroceryListPageState extends State<GroceryListPage> {
                         itemCount: _currentProducts.length,
                         itemBuilder: (context, index) {
                           final product = _currentProducts[index];
-                          return GroceryListItemCard(
-                            key: ValueKey(product
-                                .productUID), // Important for state preservation
-                            product: product,
-                            listId: widget.listId,
-                            groceryService: _groceryListService,
-                            onQuantityChanged: _updateTotalPrice,
-                            addedBy:
-                                _groceryListService.getUserNameWhoAddedProduct(
-                                    widget.listId, product.productUID),
-                            store: _groceryListService
-                                .getStoreForProduct(product.productUID),
+                          return GestureDetector(
+                            onTap: () {
+                              _showCategoryDialog(
+                                  context, widget.listId, product.productUID!);
+                            },
+                            child: GroceryListItemCard(
+                              key: ValueKey(product
+                                  .productUID), // Important for state preservation
+                              product: product,
+                              listId: widget.listId,
+                              groceryService: _groceryListService,
+                              onQuantityChanged: _updateTotalPrice,
+                              addedBy: _groceryListService
+                                  .getUserNameWhoAddedProduct(
+                                      widget.listId, product.productUID),
+                              store: _groceryListService
+                                  .getStoreForProduct(product.productUID),
+                            ),
                           );
                         },
                       );

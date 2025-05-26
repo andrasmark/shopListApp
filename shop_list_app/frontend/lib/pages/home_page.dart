@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_list_app/constants/color_scheme.dart';
 import 'package:shop_list_app/pages/list_page.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../components/list_card_home.dart';
 import '../components/nav_bar.dart';
+import '../services/groceryLists_service.dart';
 import 'items_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,6 +21,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1;
+  Map<DateTime, List<String>> _reminderEvents = {};
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+  CalendarFormat _calendarFormat = CalendarFormat.week;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReminders();
+  }
 
   void _onNavBarItemTapped(int index) {
     setState(() {
@@ -31,6 +43,31 @@ class _HomePageState extends State<HomePage> {
           Navigator.pushReplacementNamed(context, ItemsPage.id);
           break;
       }
+    });
+  }
+
+  Future<void> _loadReminders() async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final snapshot = await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .where('sharedWith', arrayContains: userId)
+        .get();
+
+    final Map<DateTime, List<String>> events = {};
+
+    for (var doc in snapshot.docs) {
+      final reminderTimestamp = doc['reminder'];
+      if (reminderTimestamp != null) {
+        final date = (reminderTimestamp as Timestamp).toDate();
+        final eventDay = DateTime(date.year, date.month, date.day);
+
+        events.putIfAbsent(eventDay, () => []);
+        events[eventDay]!.add(doc['listName'] ?? 'Unnamed List');
+      }
+    }
+
+    setState(() {
+      _reminderEvents = events;
     });
   }
 
@@ -55,51 +92,96 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               ListCardHome(
-                icon: Icons.bakery_dining,
+                icon: Icons.local_offer,
                 title: "New Grocery List",
                 subtitle: "Create a new grocery list, and add items anytime!",
-                onTap: () => print("Shop Now Clicked"),
-              ),
-              ListCardHome(
-                icon: Icons.supervisor_account,
-                title: "New Shared List",
-                subtitle: "Create a new shared list, and invite others to it!",
-                onTap: () => print("Order History Clicked"),
-              ),
-              ListCardHome(
-                icon: Icons.local_offer,
-                title: "",
-                subtitle: "",
-                onTap: () => print(""),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user != null) {
-                    final userId = user.uid;
-                    print('User ID: $userId');
+                onTap: () async {
+                  final TextEditingController controller =
+                      TextEditingController();
 
-                    final userDoc = await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(userId)
-                        .get();
-
-                    if (userDoc.exists) {
-                      print(
-                          "\nOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
-                      print('User document exists: ${userDoc.data()}');
-                    } else {
-                      print(
-                          "\nOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
-                      print('User document does not exist.');
-                    }
-                  } else {
-                    print(
-                        "\nOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
-                    print('User is not logged in.');
-                  }
+                  await showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text("New Grocery List"),
+                        content: TextField(
+                          controller: controller,
+                          decoration: const InputDecoration(
+                              hintText: "Enter list name"),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("Cancel"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              final listName = controller.text.trim();
+                              if (listName.isNotEmpty) {
+                                await GrocerylistService()
+                                    .createNewList(listName);
+                                Navigator.pop(context);
+                              }
+                            },
+                            child: const Text("Create"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 },
-                child: Text('Test Firestore'),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              TableCalendar(
+                focusedDay: _focusedDay,
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                calendarFormat: _calendarFormat,
+                availableCalendarFormats: const {
+                  CalendarFormat.month: 'Month',
+                  CalendarFormat.twoWeeks: '2 Weeks',
+                  CalendarFormat.week: 'Week',
+                },
+                onFormatChanged: (format) {
+                  setState(() {
+                    _calendarFormat = format;
+                  });
+                },
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                },
+                eventLoader: (day) {
+                  return _reminderEvents[
+                          DateTime(day.year, day.month, day.day)] ??
+                      [];
+                },
+                calendarStyle: const CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              if (_selectedDay != null)
+                ..._reminderEvents[DateTime(_selectedDay!.year,
+                            _selectedDay!.month, _selectedDay!.day)]
+                        ?.map((name) => ListTile(
+                              leading: const Icon(Icons.list),
+                              title: Text(name),
+                            )) ??
+                    [const Text("No lists scheduled for this day.")],
+              SizedBox(
+                height: 20,
               ),
             ],
           ),

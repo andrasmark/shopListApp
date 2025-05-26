@@ -1,10 +1,38 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../models/product_model.dart';
 
 class GrocerylistService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // final CollectionReference groceryLists =
+  //     FirebaseFirestore.instance.collection('groceryLists');
+
+  Future<void> createNewList(String listName) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      // 1. Új lista létrehozása groceryLists kollekcióban
+      DocumentReference listRef = await _db.collection('groceryLists').add({
+        'listName': listName,
+        'favourite': false,
+        'reminder': null,
+        'sharedWith': [uid],
+        'createdAt': Timestamp.now(),
+      });
+
+      // 2. Lista ID hozzáadása a felhasználó groceryLists mezőjéhez
+      final userDocRef = _db.collection('users').doc(uid);
+
+      await userDocRef.set({
+        'groceryLists': FieldValue.arrayUnion([listRef.id])
+      }, SetOptions(merge: true));
+    } catch (e) {
+      print('Hiba a lista létrehozásakor: $e');
+    }
+  }
 
   Future<void> deleteItemFromGroceryList(
       String listId, String productId) async {
