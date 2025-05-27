@@ -6,6 +6,7 @@ import 'package:shop_list_app/pages/home_page.dart';
 import 'package:shop_list_app/pages/items_page.dart';
 import 'package:shop_list_app/pages/list_page.dart';
 import 'package:shop_list_app/pages/splash_page.dart';
+import 'package:shop_list_app/services/auth_checker.dart';
 import 'package:shop_list_app/services/notification_service.dart';
 
 Future<void> main() async {
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       //home: SplashPage(),
-      home: LoginPage(),
+      home: AuthChecker(),
       //home: HomePage(),
       routes: {
         HomePage.id: (context) => HomePage(),
