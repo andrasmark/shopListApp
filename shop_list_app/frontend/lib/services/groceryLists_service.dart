@@ -6,8 +6,88 @@ import '../models/product_model.dart';
 
 class GrocerylistService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  Future<void> createCopyOfGroceryListWithName({
+    required String originalListId,
+    required String newName,
+    required String userId,
+  }) async {
+    final firestore = FirebaseFirestore.instance;
+
+    // Az eredeti grocery list dokumentum lekérése
+    final originalDoc =
+        await firestore.collection('groceryLists').doc(originalListId).get();
+
+    if (!originalDoc.exists) return;
+
+    // Az eredeti adatok
+    final originalData = originalDoc.data()!;
+    final originalItems = await originalDoc.reference.collection('items').get();
+
+    // Új dokumentum létrehozása alapértelmezett értékekkel
+    final newDocRef = await firestore.collection('groceryLists').add({
+      'listName': newName,
+      'sharedWith': [userId],
+      'favourite': false,
+      'reminder': null,
+      'products': originalData['products'] ?? {},
+    });
+
+    // Elemek másolása (items subcollection)
+    for (final item in originalItems.docs) {
+      await newDocRef.collection('items').doc(item.id).set(item.data());
+    }
+    final userDocRef = firestore.collection('users').doc(userId);
+    await userDocRef.update({
+      'groceryLists': FieldValue.arrayUnion([newDocRef.id]),
+    });
+  }
+
   // final CollectionReference groceryLists =
   //     FirebaseFirestore.instance.collection('groceryLists');
+
+  // Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
+  //     String userId) async {
+  //   final now = DateTime.now();
+  //   final firstDayOfMonth = DateTime(now.year, now.month, 1);
+  //   final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+  //
+  //   final firestore = FirebaseFirestore.instance;
+  //
+  //   final querySnapshot = await firestore
+  //       .collection('groceryLists')
+  //       .where('reminder',
+  //           isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
+  //       .where('reminder',
+  //           isLessThanOrEqualTo: Timestamp.fromDate(lastDayOfMonth))
+  //       .get();
+  //
+  //   Map<String, double> categoryTotals = {};
+  //
+  //   for (var listDoc in querySnapshot.docs) {
+  //     final listData = listDoc.data();
+  //     final Map<String, dynamic> products =
+  //         (listData['products'] ?? {}) as Map<String, dynamic>;
+  //
+  //     final itemsRef = listDoc.reference.collection('items');
+  //     final itemsSnapshot =
+  //         await itemsRef.where('addedBy', isEqualTo: userId).get();
+  //
+  //     for (var itemDoc in itemsSnapshot.docs) {
+  //       final itemData = itemDoc.data();
+  //       final productId = itemDoc.id;
+  //
+  //       final price = (itemData['productPrice'] ?? 0.0) as num;
+  //       final category = itemData['category'] ?? 'Other';
+  //       final quantity = (products[productId] ?? 1) as int;
+  //
+  //       final total = price * quantity;
+  //       categoryTotals[category] = (categoryTotals[category] ?? 0) + total;
+  //     }
+  //   }
+  //
+  //   return categoryTotals;
+  // }
 
   Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
       String userId) async {

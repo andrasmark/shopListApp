@@ -9,6 +9,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../components/list_card_home.dart';
 import '../components/nav_bar.dart';
 import '../services/groceryLists_service.dart';
+import 'authentication/login_page.dart';
 import 'items_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -104,8 +105,24 @@ class _HomePageState extends State<HomePage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        //backgroundColor: Colors.white,
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              print('User logged out');
+              Navigator.pushReplacementNamed(context, LoginPage.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Logged out.'),
+                ),
+              );
+            },
+            icon: Icon(Icons.logout),
+            color: Colors.black,
+          ),
+        ],
       ),
+      //backgroundColor: Colors.white,
       body: Container(
         color: COLOR_BEIGE,
         child: Padding(
@@ -205,39 +222,39 @@ class _HomePageState extends State<HomePage> {
               SizedBox(
                 height: 20,
               ),
-              // FutureBuilder<Map<String, double>>(
-              //   future: _grocerylistService
-              //       .getMonthlySpendingPerCategoryFromReminders(
-              //           FirebaseAuth.instance.currentUser!.uid),
-              //   builder: (context, snapshot) {
-              //     if (snapshot.connectionState == ConnectionState.waiting) {
-              //       return const CircularProgressIndicator();
-              //     }
-              //
-              //     final data = snapshot.data ?? {};
-              //     if (data.isEmpty) {
-              //       return const Text("Ebben a hónapban még nincs költés.");
-              //     }
-              //
-              //     return Column(
-              //       crossAxisAlignment: CrossAxisAlignment.start,
-              //       children: [
-              //         const Text(
-              //           'Költés kategóriánként (ebben a hónapban):',
-              //           style: TextStyle(
-              //               fontWeight: FontWeight.bold, fontSize: 16),
-              //         ),
-              //         const SizedBox(height: 8),
-              //         ...data.entries.map((entry) => ListTile(
-              //               leading: Icon(getCategoryIcon(entry.key)),
-              //               title: Text(entry.key),
-              //               trailing:
-              //                   Text('${entry.value.toStringAsFixed(2)} RON'),
-              //             )),
-              //       ],
-              //     );
-              //   },
-              // )
+              FutureBuilder<Map<String, double>>(
+                future: _grocerylistService
+                    .getMonthlySpendingPerCategoryFromReminders(
+                        FirebaseAuth.instance.currentUser!.uid),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  }
+
+                  final data = snapshot.data ?? {};
+                  if (data.isEmpty) {
+                    return const Text("Ebben a hónapban még nincs költés.");
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Költés kategóriánként (ebben a hónapban):',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      ...data.entries.map((entry) => ListTile(
+                            leading: Icon(getCategoryIcon(entry.key)),
+                            title: Text(entry.key),
+                            trailing:
+                                Text('${entry.value.toStringAsFixed(2)} RON'),
+                          )),
+                    ],
+                  );
+                },
+              )
             ],
           ),
         ),

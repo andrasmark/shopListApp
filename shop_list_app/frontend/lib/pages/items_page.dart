@@ -72,7 +72,7 @@ class _ItemsPageState extends State<ItemsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Items"),
-        backgroundColor: Colors.lightBlueAccent,
+        backgroundColor: Colors.white,
       ),
       body: Container(
         color: COLOR_BEIGE,

@@ -6,7 +6,7 @@ BottomNavigationBar NavBar(
     currentIndex: _selectedIndex,
     onTap: _onNavBarItemTapped,
     selectedItemColor: Colors.grey,
-    unselectedItemColor: Colors.lightBlueAccent,
+    unselectedItemColor: Colors.black,
     items: const [
       BottomNavigationBarItem(
         icon: Icon(
