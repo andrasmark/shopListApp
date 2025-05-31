@@ -27,11 +27,15 @@ class _HomePageState extends State<HomePage> {
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
   GrocerylistService _grocerylistService = GrocerylistService();
+  DateTime _focusedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  late Future<Map<String, double>> _monthlyStatsFuture;
 
   @override
   void initState() {
     super.initState();
     _loadReminders();
+    _monthlyStatsFuture = _grocerylistService
+        .getMonthlySpendingPerCategoryFromReminders(_focusedMonth);
   }
 
   void _onNavBarItemTapped(int index) {
@@ -92,6 +96,10 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _reminderEvents = events;
     });
+  }
+
+  bool isSameMonth(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month;
   }
 
   @override
@@ -189,6 +197,22 @@ class _HomePageState extends State<HomePage> {
                     _calendarFormat = format;
                   });
                 },
+                onPageChanged: (focusedDay) {
+                  final newMonth = DateTime(focusedDay.year, focusedDay.month);
+                  if (!isSameMonth(_focusedMonth, newMonth)) {
+                    setState(() {
+                      _focusedMonth = newMonth;
+                      _monthlyStatsFuture = _grocerylistService
+                          .getMonthlySpendingPerCategoryFromReminders(
+                              _focusedMonth);
+                    });
+                    _loadReminders();
+                  }
+
+                  setState(() {
+                    _focusedDay = focusedDay;
+                  });
+                },
                 onDaySelected: (selectedDay, focusedDay) {
                   setState(() {
                     _selectedDay = selectedDay;
@@ -223,9 +247,7 @@ class _HomePageState extends State<HomePage> {
                 height: 20,
               ),
               FutureBuilder<Map<String, double>>(
-                future: _grocerylistService
-                    .getMonthlySpendingPerCategoryFromReminders(
-                        FirebaseAuth.instance.currentUser!.uid),
+                future: _monthlyStatsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const CircularProgressIndicator();
@@ -245,16 +267,18 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       const SizedBox(height: 8),
-                      ...data.entries.map((entry) => ListTile(
-                            leading: Icon(getCategoryIcon(entry.key)),
-                            title: Text(entry.key),
-                            trailing:
-                                Text('${entry.value.toStringAsFixed(2)} RON'),
-                          )),
+                      ...data.entries.map(
+                        (entry) => ListTile(
+                          leading: Icon(getCategoryIcon(entry.key)),
+                          title: Text(entry.key),
+                          trailing:
+                              Text('${entry.value.toStringAsFixed(2)} RON'),
+                        ),
+                      ),
                     ],
                   );
                 },
-              )
+              ),
             ],
           ),
         ),

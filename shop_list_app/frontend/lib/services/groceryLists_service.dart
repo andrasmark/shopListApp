@@ -43,61 +43,15 @@ class GrocerylistService {
     });
   }
 
-  // final CollectionReference groceryLists =
-  //     FirebaseFirestore.instance.collection('groceryLists');
-
-  // Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
-  //     String userId) async {
-  //   final now = DateTime.now();
-  //   final firstDayOfMonth = DateTime(now.year, now.month, 1);
-  //   final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
-  //
-  //   final firestore = FirebaseFirestore.instance;
-  //
-  //   final querySnapshot = await firestore
-  //       .collection('groceryLists')
-  //       .where('reminder',
-  //           isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
-  //       .where('reminder',
-  //           isLessThanOrEqualTo: Timestamp.fromDate(lastDayOfMonth))
-  //       .get();
-  //
-  //   Map<String, double> categoryTotals = {};
-  //
-  //   for (var listDoc in querySnapshot.docs) {
-  //     final listData = listDoc.data();
-  //     final Map<String, dynamic> products =
-  //         (listData['products'] ?? {}) as Map<String, dynamic>;
-  //
-  //     final itemsRef = listDoc.reference.collection('items');
-  //     final itemsSnapshot =
-  //         await itemsRef.where('addedBy', isEqualTo: userId).get();
-  //
-  //     for (var itemDoc in itemsSnapshot.docs) {
-  //       final itemData = itemDoc.data();
-  //       final productId = itemDoc.id;
-  //
-  //       final price = (itemData['productPrice'] ?? 0.0) as num;
-  //       final category = itemData['category'] ?? 'Other';
-  //       final quantity = (products[productId] ?? 1) as int;
-  //
-  //       final total = price * quantity;
-  //       categoryTotals[category] = (categoryTotals[category] ?? 0) + total;
-  //     }
-  //   }
-  //
-  //   return categoryTotals;
-  // }
-
-  Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
-      String userId) async {
-    final now = DateTime.now();
-    final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
-
+  Future<Map<String, double>> getSpendingPerCategoryForMonth({
+    required String userId,
+    required DateTime month,
+  }) async {
     final firestore = FirebaseFirestore.instance;
 
-    // Csak azokat a groceryList-okat kérjük le, ahol reminder ebben a hónapban van
+    final firstDayOfMonth = DateTime(month.year, month.month, 1);
+    final lastDayOfMonth = DateTime(month.year, month.month + 1, 0);
+
     final querySnapshot = await firestore
         .collection('groceryLists')
         .where('reminder',
@@ -110,14 +64,20 @@ class GrocerylistService {
 
     for (var doc in querySnapshot.docs) {
       final itemsRef = doc.reference.collection('items');
-      final itemsSnapshot = await itemsRef
-          .where('addedBy',
-              isEqualTo: userId) // csak az adott user által hozzáadott elemek
-          .get();
+      final itemsSnapshot =
+          await itemsRef.where('addedBy', isEqualTo: userId).get();
+
+      final productsMap =
+          (doc.data()['products'] ?? {}) as Map<String, dynamic>;
 
       for (var itemDoc in itemsSnapshot.docs) {
         final data = itemDoc.data();
-        final quantity = (data['quantity'] ?? 1) as int;
+
+        final productData = productsMap[itemDoc.id];
+        final quantity = productData is Map && productData['quantity'] is num
+            ? (productData['quantity'] as num).toDouble()
+            : 1.0;
+
         final price = (data['productPrice'] ?? 0.0) as num;
         final category = data['category'] ?? 'Other';
 
@@ -129,28 +89,77 @@ class GrocerylistService {
     return categoryTotals;
   }
 
-  // Future<Map<String, double>> getMonthlySpendingPerCategory(
+  Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
+      DateTime selectedMonth) async {
+    // Használhatod így:
+    final start = DateTime(selectedMonth.year, selectedMonth.month);
+    final end = DateTime(selectedMonth.year, selectedMonth.month + 1);
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .where('reminder', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('reminder', isLessThan: Timestamp.fromDate(end))
+        .get();
+
+    Map<String, double> spendingPerCategory = {};
+
+    for (final doc in querySnapshot.docs) {
+      final products = doc.data()['products'] as Map<String, dynamic>?;
+
+      if (products != null && products.isNotEmpty) {
+        for (final entry in products.entries) {
+          final itemId = entry.key;
+          final productData = entry.value;
+
+          final quantity = productData['quantity'] ?? 1;
+          final category = productData['category'] ?? 'Unknown';
+
+          // Lekérjük az items alkollekcióból a price-t
+          final itemDoc =
+              await doc.reference.collection('items').doc(itemId).get();
+          final price = itemDoc.data()?['price'] ?? 0;
+
+          final total = quantity * price;
+
+          spendingPerCategory[category] =
+              (spendingPerCategory[category] ?? 0) + total;
+        }
+      }
+    }
+
+    return spendingPerCategory;
+  }
+
+  // Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
   //     String userId) async {
   //   final now = DateTime.now();
   //   final firstDayOfMonth = DateTime(now.year, now.month, 1);
+  //   final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+  //
   //   final firestore = FirebaseFirestore.instance;
   //
-  //   final querySnapshot = await firestore.collection('groceryLists').get();
+  //   // Csak azokat a groceryList-okat kérjük le, ahol reminder ebben a hónapban van
+  //   final querySnapshot = await firestore
+  //       .collection('groceryLists')
+  //       .where('reminder',
+  //           isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
+  //       .where('reminder',
+  //           isLessThanOrEqualTo: Timestamp.fromDate(lastDayOfMonth))
+  //       .get();
   //
   //   Map<String, double> categoryTotals = {};
   //
   //   for (var doc in querySnapshot.docs) {
   //     final itemsRef = doc.reference.collection('items');
   //     final itemsSnapshot = await itemsRef
-  //         .where('addedBy', isEqualTo: userId)
-  //         .where('addedAt',
-  //             isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
+  //         .where('addedBy',
+  //             isEqualTo: userId) // csak az adott user által hozzáadott elemek
   //         .get();
   //
   //     for (var itemDoc in itemsSnapshot.docs) {
   //       final data = itemDoc.data();
-  //       final quantity = data['quantity'] ?? 1;
-  //       final price = data['productPrice'] ?? 0.0;
+  //       final quantity = (data['quantity'] ?? 1) as int;
+  //       final price = (data['productPrice'] ?? 0.0) as num;
   //       final category = data['category'] ?? 'Other';
   //
   //       final total = price * quantity;

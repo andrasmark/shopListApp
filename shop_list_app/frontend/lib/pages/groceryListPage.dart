@@ -7,6 +7,7 @@ import '../models/product_model.dart';
 import '../services/groceryLists_service.dart';
 import '../services/notification_service.dart';
 import '../services/product_service.dart';
+import 'map_page.dart';
 
 class GroceryListPage extends StatefulWidget {
   final String listId;
@@ -349,16 +350,16 @@ class _GroceryListPageState extends State<GroceryListPage> {
                           color: Colors.black,
                         ),
                         onPressed: _toggleFavourite,
-                      )
-                      // IconButton(
-                      //   icon: const Icon(Icons.map_outlined),
-                      //   onPressed: () {
-                      //     Navigator.push(
-                      //       context,
-                      //       MaterialPageRoute(builder: (context) => MapPage()),
-                      //     );
-                      //   },
-                      // ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.map_outlined),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MapPage()),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
