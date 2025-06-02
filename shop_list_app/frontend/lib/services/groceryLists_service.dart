@@ -14,17 +14,14 @@ class GrocerylistService {
   }) async {
     final firestore = FirebaseFirestore.instance;
 
-    // Az eredeti grocery list dokumentum lekérése
     final originalDoc =
         await firestore.collection('groceryLists').doc(originalListId).get();
 
     if (!originalDoc.exists) return;
 
-    // Az eredeti adatok
     final originalData = originalDoc.data()!;
     final originalItems = await originalDoc.reference.collection('items').get();
 
-    // Új dokumentum létrehozása alapértelmezett értékekkel
     final newDocRef = await firestore.collection('groceryLists').add({
       'listName': newName,
       'sharedWith': [userId],
@@ -33,7 +30,6 @@ class GrocerylistService {
       'products': originalData['products'] ?? {},
     });
 
-    // Elemek másolása (items subcollection)
     for (final item in originalItems.docs) {
       await newDocRef.collection('items').doc(item.id).set(item.data());
     }
@@ -91,7 +87,6 @@ class GrocerylistService {
 
   Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
       DateTime selectedMonth) async {
-    // Használhatod így:
     final start = DateTime(selectedMonth.year, selectedMonth.month);
     final end = DateTime(selectedMonth.year, selectedMonth.month + 1);
 
@@ -114,7 +109,6 @@ class GrocerylistService {
           final quantity = productData['quantity'] ?? 1;
           final category = productData['category'] ?? 'Unknown';
 
-          // Lekérjük az items alkollekcióból a price-t
           final itemDoc =
               await doc.reference.collection('items').doc(itemId).get();
           final price = itemDoc.data()?['price'] ?? 0;
@@ -129,46 +123,6 @@ class GrocerylistService {
 
     return spendingPerCategory;
   }
-
-  // Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
-  //     String userId) async {
-  //   final now = DateTime.now();
-  //   final firstDayOfMonth = DateTime(now.year, now.month, 1);
-  //   final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
-  //
-  //   final firestore = FirebaseFirestore.instance;
-  //
-  //   // Csak azokat a groceryList-okat kérjük le, ahol reminder ebben a hónapban van
-  //   final querySnapshot = await firestore
-  //       .collection('groceryLists')
-  //       .where('reminder',
-  //           isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
-  //       .where('reminder',
-  //           isLessThanOrEqualTo: Timestamp.fromDate(lastDayOfMonth))
-  //       .get();
-  //
-  //   Map<String, double> categoryTotals = {};
-  //
-  //   for (var doc in querySnapshot.docs) {
-  //     final itemsRef = doc.reference.collection('items');
-  //     final itemsSnapshot = await itemsRef
-  //         .where('addedBy',
-  //             isEqualTo: userId) // csak az adott user által hozzáadott elemek
-  //         .get();
-  //
-  //     for (var itemDoc in itemsSnapshot.docs) {
-  //       final data = itemDoc.data();
-  //       final quantity = (data['quantity'] ?? 1) as int;
-  //       final price = (data['productPrice'] ?? 0.0) as num;
-  //       final category = data['category'] ?? 'Other';
-  //
-  //       final total = price * quantity;
-  //       categoryTotals[category] = (categoryTotals[category] ?? 0) + total;
-  //     }
-  //   }
-  //
-  //   return categoryTotals;
-  // }
 
   Future<void> createNewList(String listName) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;

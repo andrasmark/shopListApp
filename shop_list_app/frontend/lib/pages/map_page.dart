@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shop_list_app/services/map_service.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -12,11 +14,59 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   LatLng? _userLocation;
+  GoogleMapController? _googleMapController;
+  Set<Marker> _lidlMarkers = {};
+  MapService _mapService = MapService();
 
   @override
   void initState() {
     super.initState();
     _getLocation();
+    debugGetLocation();
+  }
+
+  void debugGetLocation() async {
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    print(
+        "------------------------------------------------------------------------------------------------------------------------------------");
+    print("DEBUG LOCATION: ${position.latitude}, ${position.longitude}");
+    print(
+        "------------------------------------------------------------------------------------------------------------------------------------");
+  }
+
+  Future<void> _searchNearbyStores(String _storeName) async {
+    if (_userLocation == null) return;
+
+    try {
+      final markers = await _mapService.searchNearbyStores(
+        latitude: _userLocation!.latitude,
+        longitude: _userLocation!.longitude,
+        storeName: _storeName,
+      );
+
+      if (markers.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("No store found nearby")),
+        );
+        return;
+      }
+
+      setState(() {
+        _lidlMarkers = markers.toSet();
+      });
+
+      if (_googleMapController != null) {
+        final firstMarker = markers.first.position;
+        _googleMapController!
+            .animateCamera(CameraUpdate.newLatLngZoom(firstMarker, 14));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   Future<void> _getLocation() async {
@@ -36,200 +86,117 @@ class _MapPageState extends State<MapPage> {
 
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
+    final newLocation = LatLng(position.latitude, position.longitude);
+
     setState(() {
-      _userLocation = LatLng(position.latitude, position.longitude);
+      _userLocation = newLocation;
     });
+
+    // Itt mozgatjuk a térképet a helyünkre
+    //_mapController.move(newLocation, 15.0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Map')),
-      body: _userLocation == null
-          ? const Center(child: CircularProgressIndicator())
-          : FlutterMap(
-              options: MapOptions(
-                center: _userLocation,
-                zoom: 15.0,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.app',
-                ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      width: 80,
-                      height: 80,
-                      point: _userLocation!,
-                      child: const Icon(Icons.location_pin,
-                          color: Colors.red, size: 40),
+      appBar: AppBar(
+        title: const Text('Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              // TODO: Add settings page
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Settings"),
+                  content: const Text("Itt lesznek a beállítások."),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text("Bezárás"),
                     ),
                   ],
                 ),
-              ],
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Térkép kártya stílusban
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.6,
+                width: double.infinity,
+                child: _userLocation == null
+                    ? const Center(child: CircularProgressIndicator())
+                    : GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: _userLocation!,
+                          zoom: 15.0,
+                        ),
+                        onMapCreated: (controller) {
+                          _googleMapController = controller;
+                        },
+                        myLocationEnabled: true,
+                        myLocationButtonEnabled: true,
+                        markers: {
+                          Marker(
+                            markerId: const MarkerId('user'),
+                            position: _userLocation!,
+                            icon: BitmapDescriptor.defaultMarkerWithHue(
+                                BitmapDescriptor.hueRed),
+                          ),
+                          ..._lidlMarkers,
+                        },
+                      ),
+              ),
             ),
+          ),
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  _searchNearbyStores('Lidl');
+                },
+                child: const Text('LIDL'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _searchNearbyStores('Auchan');
+                },
+                child: const Text('AUCHAN'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _searchNearbyStores('Carrefour');
+                },
+                child: const Text('CARREFOUR'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _searchNearbyStores('Kaufland');
+                },
+                child: const Text('KAUFLAND'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Ide jönnek majd a gombok vagy egyéb funkciók',
+            style: TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 }
-
-// import 'package:flutter/material.dart';
-// import 'package:flutter_map/flutter_map.dart';
-// import 'package:geolocator/geolocator.dart';
-// import 'package:latlong2/latlong.dart';
-//
-// class MapPage extends StatefulWidget {
-//   const MapPage({super.key});
-//
-//   @override
-//   State<MapPage> createState() => _MapPageState();
-// }
-//
-// class _MapPageState extends State<MapPage> {
-//   LatLng? _userLocation;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _getUserLocation();
-//   }
-//
-//   Future<void> _getUserLocation() async {
-//     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-//     if (!serviceEnabled) {
-//       await Geolocator.openLocationSettings();
-//       return;
-//     }
-//
-//     LocationPermission permission = await Geolocator.checkPermission();
-//     if (permission == LocationPermission.denied ||
-//         permission == LocationPermission.deniedForever) {
-//       permission = await Geolocator.requestPermission();
-//       if (permission != LocationPermission.whileInUse &&
-//           permission != LocationPermission.always) {
-//         return;
-//       }
-//     }
-//
-//     final pos = await Geolocator.getCurrentPosition();
-//     setState(() {
-//       _userLocation = LatLng(pos.latitude, pos.longitude);
-//     });
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Your Location")),
-//       body: _userLocation == null
-//           ? const Center(child: CircularProgressIndicator())
-//           : Container(
-//               margin: const EdgeInsets.all(16),
-//               height: 400,
-//               child: FlutterMap(
-//                 options: MapOptions(
-//                   center: _userLocation,
-//                   zoom: 15.0,
-//                 ),
-//                 children: [
-//                   TileLayer(
-//                     urlTemplate:
-//                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-//                     userAgentPackageName: 'com.example.app',
-//                   ),
-//                   MarkerLayer(
-//                     markers: [
-//                       Marker(
-//                         width: 60,
-//                         height: 60,
-//                         point: _userLocation!,
-//                         child: const Icon(
-//                           Icons.person_pin_circle,
-//                           size: 50,
-//                           color: Colors.blue,
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             ),
-//     );
-//   }
-// }
-//
-// // class MapPage extends StatefulWidget {
-// //   final String listId;
-// //   const MapPage({super.key, required this.listId});
-// //
-// //   @override
-// //   State<MapPage> createState() => _MapPageState();
-// // }
-// //
-// // class _MapPageState extends State<MapPage> {
-// //   GoogleMapController? _mapController;
-// //   LatLng? _userLocation;
-// //   List<LatLng> _storeLocations = [];
-// //   Set<Polyline> _polylines = {};
-// //
-// //   @override
-// //   void initState() {
-// //     super.initState();
-// //     _initLocationAndRoute();
-// //   }
-// //
-// //   Future<void> _initLocationAndRoute() async {
-// //     _userLocation = await _getUserLocation();
-// //     _storeLocations = await _getStoresFromGroceryList(widget.listId);
-// //     await _generateRoute();
-// //     setState(() {});
-// //   }
-// //
-// //   Future<LatLng> _getUserLocation() async {
-// //     final pos = await Geolocator.getCurrentPosition();
-// //     return LatLng(pos.latitude, pos.longitude);
-// //   }
-// //
-// //   Future<List<LatLng>> _getStoresFromGroceryList(String listId) async {
-// //     // Replace this with Firestore logic to determine store locations (e.g. via store name)
-// //     return [
-// //       LatLng(46.7712, 23.6236), // Cluj Kaufland
-// //       LatLng(46.7680, 23.5899), // Cluj Lidl
-// //     ];
-// //   }
-// //
-// //   Future<void> _generateRoute() async {
-// //     // This should use Google Directions API or OSRM to find the optimized route between all points
-// //     // Here we just connect points in order
-// //     List<LatLng> route = [_userLocation!, ..._storeLocations];
-// //     final polyline = Polyline(
-// //       polylineId: const PolylineId("route"),
-// //       color: Colors.blue,
-// //       width: 5,
-// //       points: route,
-// //     );
-// //     _polylines = {polyline};
-// //   }
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     if (_userLocation == null)
-// //       return const Center(child: CircularProgressIndicator());
-// //
-// //     return Scaffold(
-// //       appBar: AppBar(title: const Text("Store Route")),
-// //       body: GoogleMap(
-// //         initialCameraPosition: CameraPosition(target: _userLocation!, zoom: 13),
-// //         myLocationEnabled: true,
-// //         polylines: _polylines,
-// //         markers: {
-// //           Marker(markerId: const MarkerId("user"), position: _userLocation!),
-// //           for (int i = 0; i < _storeLocations.length; i++)
-// //             Marker(markerId: MarkerId("store$i"), position: _storeLocations[i]),
-// //         },
-// //         onMapCreated: (controller) => _mapController = controller,
-// //       ),
-// //     );
-// //   }
-// // }

@@ -8,6 +8,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../components/list_card_home.dart';
 import '../components/nav_bar.dart';
+import '../components/pie_chart.dart';
 import '../services/groceryLists_service.dart';
 import 'authentication/login_page.dart';
 import 'items_page.dart';
@@ -25,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   Map<DateTime, List<String>> _reminderEvents = {};
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  CalendarFormat _calendarFormat = CalendarFormat.week;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
   GrocerylistService _grocerylistService = GrocerylistService();
   DateTime _focusedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   late Future<Map<String, double>> _monthlyStatsFuture;
@@ -133,153 +134,216 @@ class _HomePageState extends State<HomePage> {
       //backgroundColor: Colors.white,
       body: Container(
         color: COLOR_BEIGE,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              ListCardHome(
-                icon: Icons.local_offer,
-                title: "New Grocery List",
-                subtitle: "Create a new grocery list, and add items anytime!",
-                onTap: () async {
-                  final TextEditingController controller =
-                      TextEditingController();
+        child: SingleChildScrollView(
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                ListCardHome(
+                  icon: Icons.local_offer,
+                  title: "New Grocery List",
+                  subtitle: "Create a new grocery list, and add items anytime!",
+                  onTap: () async {
+                    final TextEditingController controller =
+                        TextEditingController();
 
-                  await showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text("New Grocery List"),
-                        content: TextField(
-                          controller: controller,
-                          decoration: const InputDecoration(
-                              hintText: "Enter list name"),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text("Cancel"),
+                    await showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text("New Grocery List"),
+                          content: TextField(
+                            controller: controller,
+                            decoration: const InputDecoration(
+                                hintText: "Enter list name"),
                           ),
-                          ElevatedButton(
-                            onPressed: () async {
-                              final listName = controller.text.trim();
-                              if (listName.isNotEmpty) {
-                                await GrocerylistService()
-                                    .createNewList(listName);
-                                Navigator.pop(context);
-                              }
-                            },
-                            child: const Text("Create"),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              TableCalendar(
-                focusedDay: _focusedDay,
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                calendarFormat: _calendarFormat,
-                availableCalendarFormats: const {
-                  CalendarFormat.month: 'Month',
-                  CalendarFormat.twoWeeks: '2 Weeks',
-                  CalendarFormat.week: 'Week',
-                },
-                onFormatChanged: (format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                },
-                onPageChanged: (focusedDay) {
-                  final newMonth = DateTime(focusedDay.year, focusedDay.month);
-                  if (!isSameMonth(_focusedMonth, newMonth)) {
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("Cancel"),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                final listName = controller.text.trim();
+                                if (listName.isNotEmpty) {
+                                  await GrocerylistService()
+                                      .createNewList(listName);
+                                  Navigator.pop(context);
+                                }
+                              },
+                              child: const Text("Create"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                TableCalendar(
+                  focusedDay: _focusedDay,
+                  firstDay: DateTime.utc(2020, 1, 1),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                  calendarFormat: _calendarFormat,
+                  availableCalendarFormats: const {
+                    CalendarFormat.month: 'Month',
+                    CalendarFormat.twoWeeks: '2 Weeks',
+                    CalendarFormat.week: 'Week',
+                  },
+                  onFormatChanged: (format) {
                     setState(() {
-                      _focusedMonth = newMonth;
-                      _monthlyStatsFuture = _grocerylistService
-                          .getMonthlySpendingPerCategoryFromReminders(
-                              _focusedMonth);
+                      _calendarFormat = format;
                     });
-                    _loadReminders();
-                  }
+                  },
+                  onPageChanged: (focusedDay) {
+                    final newMonth =
+                        DateTime(focusedDay.year, focusedDay.month);
+                    if (!isSameMonth(_focusedMonth, newMonth)) {
+                      setState(() {
+                        _focusedMonth = newMonth;
+                        _monthlyStatsFuture = _grocerylistService
+                            .getMonthlySpendingPerCategoryFromReminders(
+                                _focusedMonth);
+                      });
+                      _loadReminders();
+                    }
 
-                  setState(() {
-                    _focusedDay = focusedDay;
-                  });
-                },
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                },
-                eventLoader: (day) {
-                  return _reminderEvents[
-                          DateTime(day.year, day.month, day.day)] ??
-                      [];
-                },
-                calendarStyle: const CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Colors.orange,
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
+                    setState(() {
+                      _focusedDay = focusedDay;
+                    });
+                  },
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      _selectedDay = selectedDay;
+                      _focusedDay = focusedDay;
+                    });
+                  },
+                  eventLoader: (day) {
+                    return _reminderEvents[
+                            DateTime(day.year, day.month, day.day)] ??
+                        [];
+                  },
+                  calendarStyle: const CalendarStyle(
+                    todayDecoration: BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
-              ),
-              if (_selectedDay != null)
-                ..._reminderEvents[DateTime(_selectedDay!.year,
-                            _selectedDay!.month, _selectedDay!.day)]
-                        ?.map((name) => ListTile(
-                              leading: const Icon(Icons.list),
-                              title: Text(name),
-                            )) ??
-                    [const Text("No lists scheduled for this day.")],
-              SizedBox(
-                height: 20,
-              ),
-              FutureBuilder<Map<String, double>>(
-                future: _monthlyStatsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  }
+                if (_selectedDay != null)
+                  ..._reminderEvents[DateTime(_selectedDay!.year,
+                              _selectedDay!.month, _selectedDay!.day)]
+                          ?.map((name) => ListTile(
+                                leading: const Icon(Icons.list),
+                                title: Text(name),
+                              )) ??
+                      [const Text("No lists scheduled for this day.")],
+                SizedBox(
+                  height: 20,
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: FutureBuilder<Map<String, double>>(
+                        future: _monthlyStatsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: SizedBox(
+                                width: 32,
+                                height: 32,
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
 
-                  final data = snapshot.data ?? {};
-                  if (data.isEmpty) {
-                    return const Text("Ebben a hónapban még nincs költés.");
-                  }
+                          final data = snapshot.data ?? {};
+                          if (data.isEmpty) {
+                            return const Text(
+                                "You didn't buy anything this month.");
+                          }
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Költés kategóriánként (ebben a hónapban):',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Spending for category this month:',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              buildPieChart(data),
+                            ],
+                          );
+                        },
                       ),
-                      const SizedBox(height: 8),
-                      ...data.entries.map(
-                        (entry) => ListTile(
-                          leading: Icon(getCategoryIcon(entry.key)),
-                          title: Text(entry.key),
-                          trailing:
-                              Text('${entry.value.toStringAsFixed(2)} RON'),
-                        ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: FutureBuilder<Map<String, double>>(
+                        future: _monthlyStatsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: SizedBox(
+                                width: 32,
+                                height: 32,
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          final data = snapshot.data ?? {};
+                          if (data.isEmpty) {
+                            return const Text("");
+                            // return const Text("You didn't buy anything this month.");
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Spending for each category this month:',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              ...data.entries.map(
+                                (entry) => ListTile(
+                                  dense: true,
+                                  visualDensity: VisualDensity.compact,
+                                  leading: Icon(getCategoryIcon(entry.key)),
+                                  title: Text(
+                                    entry.key,
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  trailing: Text(
+                                      '${entry.value.toStringAsFixed(2)} RON'),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                    ],
-                  );
-                },
-              ),
-            ],
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
         ),
       ),
