@@ -7,6 +7,28 @@ import '../models/product_model.dart';
 class GrocerylistService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  Future<List<String>> getStoresForList(
+      Map<String, dynamic> groceryList) async {
+    final allStores = ['Lidl', 'Auchan', 'Carrefour', 'Kaufland'];
+    final requiredStores = <String>{};
+
+    final products = groceryList['products'] as Map<String, dynamic>? ?? {};
+
+    for (final productId in products.keys) {
+      for (final store in allStores) {
+        final productDoc =
+            await _db.collection('products$store').doc(productId).get();
+
+        if (productDoc.exists) {
+          requiredStores.add(store);
+          break;
+        }
+      }
+    }
+
+    return requiredStores.toList();
+  }
+
   Future<void> createCopyOfGroceryListWithName({
     required String originalListId,
     required String newName,

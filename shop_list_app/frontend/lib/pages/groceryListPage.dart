@@ -26,6 +26,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
   bool _isInitialLoad = true;
   bool isFavourite = false;
   Timestamp? _reminder;
+  Map<String, dynamic>? currentGroceryList;
 
   Future<void> _updateTotalPrice() async {
     final total = await _groceryListService.calculateTotalPrice(widget.listId);
@@ -39,10 +40,27 @@ class _GroceryListPageState extends State<GroceryListPage> {
   @override
   void initState() {
     super.initState();
-    // Load initial price immediately
     _updateTotalPrice();
     _loadFavouriteStatus();
     _fetchReminder();
+    fetchGroceryList();
+  }
+
+  Future<void> fetchGroceryList() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('groceryLists')
+        .doc(widget.listId)
+        .get();
+
+    if (doc.exists) {
+      setState(() {
+        currentGroceryList = doc.data();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("List not found")),
+      );
+    }
   }
 
   Future<void> _fetchReminder() async {
@@ -102,13 +120,11 @@ class _GroceryListPageState extends State<GroceryListPage> {
 
     final Timestamp reminderTimestamp = Timestamp.fromDate(combined);
 
-    // Frissítés Firestore-ban
     await FirebaseFirestore.instance
         .collection('groceryLists')
         .doc(widget.listId)
         .update({'reminder': reminderTimestamp});
 
-    // Lokális értesítés ütemezése
     await NotificationService().scheduleReminder(
       listId: widget.listId,
       reminderTime: reminderTimestamp,
@@ -356,7 +372,9 @@ class _GroceryListPageState extends State<GroceryListPage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => MapPage()),
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    MapPage(groceryList: currentGroceryList)),
                           );
                         },
                       ),

@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shop_list_app/services/groceryLists_service.dart';
 import 'package:shop_list_app/services/map_service.dart';
 
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  final Map<String, dynamic>? groceryList;
+  const MapPage({super.key, required this.groceryList});
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -17,12 +20,81 @@ class _MapPageState extends State<MapPage> {
   GoogleMapController? _googleMapController;
   Set<Marker> _lidlMarkers = {};
   MapService _mapService = MapService();
+  Polyline? _routePolyline;
+  GrocerylistService _grocerylistService = GrocerylistService();
 
   @override
   void initState() {
     super.initState();
     _getLocation();
     debugGetLocation();
+  }
+
+  Future<void> _drawRouteToStores(List<String> storeNames) async {
+    if (_userLocation == null) return;
+
+    Map<String, LatLng> storeLocations = {};
+
+    for (final storeName in storeNames) {
+      final markers = await _mapService.searchNearbyStores(
+        latitude: _userLocation!.latitude,
+        longitude: _userLocation!.longitude,
+        storeName: storeName,
+      );
+
+      final nearestStorePos =
+          _mapService.getNearestMarker(_userLocation!, markers);
+      if (nearestStorePos != null) {
+        storeLocations[storeName] = nearestStorePos;
+      }
+    }
+
+    if (storeLocations.isEmpty) return;
+
+    double haversineDistance(LatLng a, LatLng b) {
+      const R = 6371e3; // méter
+      final lat1 = a.latitude * pi / 180;
+      final lat2 = b.latitude * pi / 180;
+      final deltaLat = (b.latitude - a.latitude) * pi / 180;
+      final deltaLon = (b.longitude - a.longitude) * pi / 180;
+
+      final havA = sin(deltaLat / 2) * sin(deltaLat / 2) +
+          cos(lat1) * cos(lat2) * sin(deltaLon / 2) * sin(deltaLon / 2);
+      final c = 2 * atan2(sqrt(havA), sqrt(1 - havA));
+
+      return R * c;
+    }
+
+    List<LatLng> routePoints = [];
+    LatLng currentPoint = _userLocation!;
+    Set<String> unvisitedStores = Set.from(storeLocations.keys);
+
+    while (unvisitedStores.isNotEmpty) {
+      String nearestStore = unvisitedStores.first;
+      double nearestDistance =
+          haversineDistance(currentPoint, storeLocations[nearestStore]!);
+
+      for (final store in unvisitedStores) {
+        final d = haversineDistance(currentPoint, storeLocations[store]!);
+        if (d < nearestDistance) {
+          nearestDistance = d;
+          nearestStore = store;
+        }
+      }
+
+      routePoints.add(storeLocations[nearestStore]!);
+      unvisitedStores.remove(nearestStore);
+      currentPoint = storeLocations[nearestStore]!;
+    }
+
+    setState(() {
+      _routePolyline = Polyline(
+        polylineId: const PolylineId('route'),
+        color: Colors.blue,
+        width: 5,
+        points: [_userLocation!, ...routePoints],
+      );
+    });
   }
 
   void debugGetLocation() async {
@@ -147,6 +219,8 @@ class _MapPageState extends State<MapPage> {
                         onMapCreated: (controller) {
                           _googleMapController = controller;
                         },
+                        polylines:
+                            _routePolyline != null ? {_routePolyline!} : {},
                         myLocationEnabled: true,
                         myLocationButtonEnabled: true,
                         markers: {
@@ -191,9 +265,20 @@ class _MapPageState extends State<MapPage> {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Ide jönnek majd a gombok vagy egyéb funkciók',
-            style: TextStyle(fontSize: 16),
+          ElevatedButton(
+            onPressed: () async {
+              print(
+                  "START-----------------------------------------------------------------------------------------------------");
+              final groceryList = widget.groceryList!;
+              final requiredStores =
+                  await _grocerylistService.getStoresForList(groceryList);
+              _drawRouteToStores(requiredStores);
+              print(groceryList);
+              print(requiredStores);
+              print(
+                  "END-----------------------------------------------------------------------------------------------------");
+            },
+            child: const Text('Show Route'),
           ),
         ],
       ),
