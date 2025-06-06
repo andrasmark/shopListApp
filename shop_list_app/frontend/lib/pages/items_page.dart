@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shop_list_app/pages/home_page.dart';
 
@@ -69,8 +70,12 @@ class _ItemsPageState extends State<ItemsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final isGuest = user == null;
+
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text("Items"),
         backgroundColor: Colors.white,
       ),
@@ -155,12 +160,15 @@ class _ItemsPageState extends State<ItemsPage> {
                         final product = products[index];
                         return GestureDetector(
                           onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return ItemInfo(product: product);
-                              },
-                            );
+                            if (user == null)
+                              null;
+                            else
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return ItemInfo(product: product);
+                                },
+                              );
                           },
                           child: ItemCard(product: product),
                         );
@@ -176,68 +184,4 @@ class _ItemsPageState extends State<ItemsPage> {
       bottomNavigationBar: NavBar(_selectedIndex, _onNavBarItemTapped),
     );
   }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     appBar: AppBar(
-  //       title: Text("Items"),
-  //       backgroundColor: Colors.lightBlueAccent,
-  //     ),
-  //     body: Container(
-  //       color: COLOR_BEIGE,
-  //       child: Column(
-  //         children: [
-  //           Text("Products from Kaufland"),
-  //           StreamBuilder<List<Product>>(
-  //             stream: _productService.getProductsFromKaufland(),
-  //             builder: (context, snapshot) {
-  //               if (snapshot.connectionState == ConnectionState.waiting) {
-  //                 return Center(child: CircularProgressIndicator());
-  //               } else if (snapshot.hasError) {
-  //                 return Center(child: Text('Error: ${snapshot.error}'));
-  //               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-  //                 return Center(child: Text('No products found.'));
-  //               } else {
-  //                 final products = snapshot.data!;
-  //                 print(products);
-  //                 return Container(
-  //                   padding: EdgeInsets.all(8.0),
-  //                   decoration: BoxDecoration(
-  //                     color: Colors.white,
-  //                     borderRadius: BorderRadius.circular(8.0),
-  //                   ),
-  //                   height: 200,
-  //                   child: ListView.builder(
-  //                     scrollDirection: Axis.horizontal,
-  //                     itemCount: products.length,
-  //                     itemBuilder: (context, index) {
-  //                       final product = products[index];
-  //                       return GestureDetector(
-  //                         onTap: () {
-  //                           showDialog(
-  //                             context: context,
-  //                             builder: (BuildContext context) {
-  //                               return KauflandItemInfo(product: product);
-  //                             },
-  //                           );
-  //                         },
-  //                         child: Container(
-  //                           width: MediaQuery.of(context).size.width / 3,
-  //                           margin: EdgeInsets.symmetric(horizontal: 4.0),
-  //                           child: KauflandItemCard(product: product),
-  //                         ),
-  //                       );
-  //                     },
-  //                   ),
-  //                 );
-  //               }
-  //             },
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //     bottomNavigationBar: NavBar(_selectedIndex, _onNavBarItemTapped),
-  //   );
-  // }
 }

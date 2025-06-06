@@ -65,6 +65,7 @@ class GrocerylistService {
       DateTime selectedMonth, String currentUserId) async {
     final start = DateTime(selectedMonth.year, selectedMonth.month);
     final end = DateTime(selectedMonth.year, selectedMonth.month + 1);
+    final user = FirebaseAuth.instance.currentUser;
 
     final userDoc = await FirebaseFirestore.instance
         .collection('users')

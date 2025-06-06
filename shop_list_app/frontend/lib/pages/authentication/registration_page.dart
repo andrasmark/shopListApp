@@ -24,6 +24,20 @@ class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+            },
+            child: const Text("Skip"),
+          ),
+        ],
+      ),
       body: ModalProgressHUD(
         inAsyncCall: showSpinner,
         child: Padding(

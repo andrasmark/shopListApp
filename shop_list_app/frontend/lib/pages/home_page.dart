@@ -35,12 +35,21 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      _monthlyStatsFuture =
+          _grocerylistService.getMonthlySpendingPerCategoryFromReminders(
+        _focusedMonth,
+        user.uid,
+      );
+    } else {
+      // Guest esetén pl. üres adat vagy Future.value({})
+      _monthlyStatsFuture = Future.value({});
+    }
+
     _loadReminders();
-    _monthlyStatsFuture =
-        _grocerylistService.getMonthlySpendingPerCategoryFromReminders(
-      _focusedMonth,
-      FirebaseAuth.instance.currentUser!.uid,
-    );
   }
 
   void _onNavBarItemTapped(int index) {
@@ -79,6 +88,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadReminders() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() {
+        _reminderEvents = {};
+      });
+      return;
+    }
+
     final userId = FirebaseAuth.instance.currentUser!.uid;
     final snapshot = await FirebaseFirestore.instance
         .collection('groceryLists')
@@ -109,8 +126,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final isGuest = user == null;
+
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           "Welcome to Grocely!",
           style: GoogleFonts.notoSerif(
@@ -131,20 +152,32 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.settings),
             color: Colors.black,
           ),
-          IconButton(
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              print('User logged out');
-              Navigator.pushReplacementNamed(context, LoginPage.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Logged out.'),
-                ),
-              );
-            },
-            icon: Icon(Icons.logout),
-            color: Colors.black,
-          ),
+          if (isGuest)
+            IconButton(
+              icon: const Icon(Icons.person),
+              color: Colors.black,
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                );
+              },
+            )
+          else
+            IconButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                print('User logged out');
+                Navigator.pushReplacementNamed(context, LoginPage.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Logged out.'),
+                  ),
+                );
+              },
+              icon: Icon(Icons.logout),
+              color: Colors.black,
+            ),
         ],
       ),
       //backgroundColor: Colors.white,
@@ -162,9 +195,38 @@ class _HomePageState extends State<HomePage> {
                   title: "New Grocery List",
                   subtitle: "Create a new grocery list, and add items anytime!",
                   onTap: () async {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null) {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Not Logged In"),
+                            content: const Text("You need to log in!"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text("OK"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => LoginPage()),
+                                  );
+                                },
+                                child: const Text("Log In"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      return;
+                    }
                     final TextEditingController controller =
                         TextEditingController();
-
                     await showDialog(
                       context: context,
                       builder: (context) {
@@ -359,7 +421,16 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ],
-                )
+                ),
+                if (isGuest)
+                  Container(
+                    color: Colors.black.withOpacity(0.5),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      "You need to log in to access this page",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ),
               ],
             ),
           ),

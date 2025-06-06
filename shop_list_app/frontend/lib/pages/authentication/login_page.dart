@@ -23,6 +23,20 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       //backgroundColor: Colors.white,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+            },
+            child: const Text("Skip"),
+          ),
+        ],
+      ),
       body: ModalProgressHUD(
         inAsyncCall: showSpinner,
         child: Padding(

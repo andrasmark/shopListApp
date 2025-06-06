@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'home_page.dart';
+import 'package:shop_list_app/services/auth_checker.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -16,7 +15,11 @@ class _SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, HomePage.id);
+      // Navigator.pushReplacementNamed(context, HomePage.id);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => AuthChecker()),
+      );
     });
   }
 
