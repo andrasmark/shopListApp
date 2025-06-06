@@ -4,8 +4,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shop_list_app/pages/settings_page.dart';
 import 'package:shop_list_app/services/groceryLists_service.dart';
 import 'package:shop_list_app/services/map_service.dart';
+
+import '../services/settings_service.dart';
 
 class MapPage extends StatefulWidget {
   final Map<String, dynamic>? groceryList;
@@ -22,6 +25,7 @@ class _MapPageState extends State<MapPage> {
   MapService _mapService = MapService();
   Polyline? _routePolyline;
   GrocerylistService _grocerylistService = GrocerylistService();
+  bool _locationAllowed = true;
 
   @override
   void initState() {
@@ -145,15 +149,13 @@ class _MapPageState extends State<MapPage> {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     LocationPermission permission = await Geolocator.checkPermission();
 
-    if (!serviceEnabled) {
+    if (!serviceEnabled ||
+        permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      setState(() {
+        _locationAllowed = false;
+      });
       return;
-    }
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return;
-      }
     }
 
     final position = await Geolocator.getCurrentPosition(
@@ -162,11 +164,36 @@ class _MapPageState extends State<MapPage> {
 
     setState(() {
       _userLocation = newLocation;
+      _locationAllowed = true;
     });
-
-    // Itt mozgatjuk a térképet a helyünkre
-    //_mapController.move(newLocation, 15.0);
   }
+
+  // Future<void> _getLocation() async {
+  //   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  //   LocationPermission permission = await Geolocator.checkPermission();
+  //
+  //   if (!serviceEnabled) {
+  //     return;
+  //   }
+  //
+  //   if (permission == LocationPermission.denied) {
+  //     permission = await Geolocator.requestPermission();
+  //     if (permission == LocationPermission.denied) {
+  //       return;
+  //     }
+  //   }
+  //
+  //   final position = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.high);
+  //   final newLocation = LatLng(position.latitude, position.longitude);
+  //
+  //   setState(() {
+  //     _userLocation = newLocation;
+  //   });
+  //
+  //   // Itt mozgatjuk a térképet a helyünkre
+  //   //_mapController.move(newLocation, 15.0);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -176,17 +203,34 @@ class _MapPageState extends State<MapPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              // TODO: Add settings page
+            onPressed: () async {
+              final settingsService = SettingsService();
+              final locationEnabled =
+                  await settingsService.getLocationAllowed();
+
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text("Settings"),
-                  content: const Text("Itt lesznek a beállítások."),
+                  content: Text(
+                    "Location: ${locationEnabled ? 'Enabled' : 'Disabled'}",
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text("Bezárás"),
+                      child: const Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsPage(),
+                          ),
+                        );
+                      },
+                      child: const Text("Settings"),
                     ),
                   ],
                 ),
@@ -195,91 +239,132 @@ class _MapPageState extends State<MapPage> {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Térkép kártya stílusban
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.6,
-                width: double.infinity,
-                child: _userLocation == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: _userLocation!,
-                          zoom: 15.0,
-                        ),
-                        onMapCreated: (controller) {
-                          _googleMapController = controller;
-                        },
-                        polylines:
-                            _routePolyline != null ? {_routePolyline!} : {},
-                        myLocationEnabled: true,
-                        myLocationButtonEnabled: true,
-                        markers: {
-                          Marker(
-                            markerId: const MarkerId('user'),
-                            position: _userLocation!,
-                            icon: BitmapDescriptor.defaultMarkerWithHue(
-                                BitmapDescriptor.hueRed),
-                          ),
-                          ..._lidlMarkers,
-                        },
+          AbsorbPointer(
+            absorbing: !_locationAllowed,
+            child: Opacity(
+              opacity: _locationAllowed ? 1.0 : 0.3,
+              child: Column(
+                children: [
+                  // Térkép kártya stílusban
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
+                      clipBehavior: Clip.antiAlias,
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        width: double.infinity,
+                        child: _userLocation == null
+                            ? const Center(child: CircularProgressIndicator())
+                            : GoogleMap(
+                                initialCameraPosition: CameraPosition(
+                                  target: _userLocation!,
+                                  zoom: 15.0,
+                                ),
+                                onMapCreated: (controller) {
+                                  _googleMapController = controller;
+                                },
+                                polylines: _routePolyline != null
+                                    ? {_routePolyline!}
+                                    : {},
+                                myLocationEnabled: true,
+                                myLocationButtonEnabled: true,
+                                markers: {
+                                  Marker(
+                                    markerId: const MarkerId('user'),
+                                    position: _userLocation!,
+                                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                                        BitmapDescriptor.hueRed),
+                                  ),
+                                  ..._lidlMarkers,
+                                },
+                              ),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          _searchNearbyStores('Lidl');
+                        },
+                        child: const Text('LIDL'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _searchNearbyStores('Auchan');
+                        },
+                        child: const Text('AUCHAN'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _searchNearbyStores('Carrefour');
+                        },
+                        child: const Text('CARREFOUR'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _searchNearbyStores('Kaufland');
+                        },
+                        child: const Text('KAUFLAND'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      print(
+                          "START-----------------------------------------------------------------------------------------------------");
+                      final groceryList = widget.groceryList!;
+                      final requiredStores = await _grocerylistService
+                          .getStoresForList(groceryList);
+                      _drawRouteToStores(requiredStores);
+                      print(groceryList);
+                      print(requiredStores);
+                      print(
+                          "END-----------------------------------------------------------------------------------------------------");
+                    },
+                    child: const Text('Show Route'),
+                  ),
+                ],
               ),
             ),
           ),
-          Row(
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  _searchNearbyStores('Lidl');
-                },
-                child: const Text('LIDL'),
+          if (!_locationAllowed)
+            Container(
+              color: Colors.black.withOpacity(0.6),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Location is disabled.\nPlease go to settings to enable it.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SettingsPage()),
+                          );
+                        },
+                        child: const Text('Go to Settings'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  _searchNearbyStores('Auchan');
-                },
-                child: const Text('AUCHAN'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _searchNearbyStores('Carrefour');
-                },
-                child: const Text('CARREFOUR'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _searchNearbyStores('Kaufland');
-                },
-                child: const Text('KAUFLAND'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () async {
-              print(
-                  "START-----------------------------------------------------------------------------------------------------");
-              final groceryList = widget.groceryList!;
-              final requiredStores =
-                  await _grocerylistService.getStoresForList(groceryList);
-              _drawRouteToStores(requiredStores);
-              print(groceryList);
-              print(requiredStores);
-              print(
-                  "END-----------------------------------------------------------------------------------------------------");
-            },
-            child: const Text('Show Route'),
-          ),
+            ),
         ],
       ),
     );

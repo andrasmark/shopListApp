@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_list_app/constants/color_scheme.dart';
 import 'package:shop_list_app/pages/list_page.dart';
+import 'package:shop_list_app/pages/settings_page.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../components/list_card_home.dart';
@@ -115,6 +116,18 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         actions: [
+          IconButton(
+            onPressed: () async {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+            },
+            icon: Icon(Icons.settings),
+            color: Colors.black,
+          ),
           IconButton(
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
