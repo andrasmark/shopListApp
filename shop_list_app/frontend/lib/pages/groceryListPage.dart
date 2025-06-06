@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shop_list_app/constants/color_scheme.dart';
 
 import '../components/groceryListItem/groceryListItemCard.dart';
+import '../components/invite_user_dialog.dart';
 import '../models/product_model.dart';
 import '../services/groceryLists_service.dart';
 import '../services/notification_service.dart';
@@ -236,7 +237,21 @@ class _GroceryListPageState extends State<GroceryListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Grocery List")),
+      appBar: AppBar(
+        title: const Text("Grocery List"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add_alt_1), // invite icon
+            tooltip: 'Felhasználó meghívása',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => InviteUserDialog(listId: widget.listId),
+              );
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(

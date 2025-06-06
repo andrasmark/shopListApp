@@ -61,67 +61,37 @@ class GrocerylistService {
     });
   }
 
-  Future<Map<String, double>> getSpendingPerCategoryForMonth({
-    required String userId,
-    required DateTime month,
-  }) async {
-    final firestore = FirebaseFirestore.instance;
-
-    final firstDayOfMonth = DateTime(month.year, month.month, 1);
-    final lastDayOfMonth = DateTime(month.year, month.month + 1, 0);
-
-    final querySnapshot = await firestore
-        .collection('groceryLists')
-        .where('reminder',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(firstDayOfMonth))
-        .where('reminder',
-            isLessThanOrEqualTo: Timestamp.fromDate(lastDayOfMonth))
-        .get();
-
-    Map<String, double> categoryTotals = {};
-
-    for (var doc in querySnapshot.docs) {
-      final itemsRef = doc.reference.collection('items');
-      final itemsSnapshot =
-          await itemsRef.where('addedBy', isEqualTo: userId).get();
-
-      final productsMap =
-          (doc.data()['products'] ?? {}) as Map<String, dynamic>;
-
-      for (var itemDoc in itemsSnapshot.docs) {
-        final data = itemDoc.data();
-
-        final productData = productsMap[itemDoc.id];
-        final quantity = productData is Map && productData['quantity'] is num
-            ? (productData['quantity'] as num).toDouble()
-            : 1.0;
-
-        final price = (data['productPrice'] ?? 0.0) as num;
-        final category = data['category'] ?? 'Other';
-
-        final total = price * quantity;
-        categoryTotals[category] = (categoryTotals[category] ?? 0) + total;
-      }
-    }
-
-    return categoryTotals;
-  }
-
   Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
-      DateTime selectedMonth) async {
+      DateTime selectedMonth, String currentUserId) async {
     final start = DateTime(selectedMonth.year, selectedMonth.month);
     final end = DateTime(selectedMonth.year, selectedMonth.month + 1);
 
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('groceryLists')
-        .where('reminder', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-        .where('reminder', isLessThan: Timestamp.fromDate(end))
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserId)
         .get();
+
+    final listIds = List<String>.from(userDoc.data()?['groceryLists'] ?? []);
 
     Map<String, double> spendingPerCategory = {};
 
-    for (final doc in querySnapshot.docs) {
-      final products = doc.data()['products'] as Map<String, dynamic>?;
+    for (final listId in listIds) {
+      final listDoc = await FirebaseFirestore.instance
+          .collection('groceryLists')
+          .doc(listId)
+          .get();
+
+      final reminder = listDoc.data()?['reminder'];
+      if (reminder is Timestamp) {
+        final reminderDate = reminder.toDate();
+        if (reminderDate.isBefore(start) || reminderDate.isAfter(end)) {
+          continue;
+        }
+      } else {
+        continue;
+      }
+
+      final products = listDoc.data()?['products'] as Map<String, dynamic>?;
 
       if (products != null && products.isNotEmpty) {
         for (final entry in products.entries) {
@@ -132,7 +102,7 @@ class GrocerylistService {
           final category = productData['category'] ?? 'Unknown';
 
           final itemDoc =
-              await doc.reference.collection('items').doc(itemId).get();
+              await listDoc.reference.collection('items').doc(itemId).get();
           final price = itemDoc.data()?['price'] ?? 0;
 
           final total = quantity * price;
@@ -145,6 +115,45 @@ class GrocerylistService {
 
     return spendingPerCategory;
   }
+
+  // Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
+  //     DateTime selectedMonth) async {
+  //   final start = DateTime(selectedMonth.year, selectedMonth.month);
+  //   final end = DateTime(selectedMonth.year, selectedMonth.month + 1);
+  //
+  //   final querySnapshot = await FirebaseFirestore.instance
+  //       .collection('groceryLists')
+  //       .where('reminder', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+  //       .where('reminder', isLessThan: Timestamp.fromDate(end))
+  //       .get();
+  //
+  //   Map<String, double> spendingPerCategory = {};
+  //
+  //   for (final doc in querySnapshot.docs) {
+  //     final products = doc.data()['products'] as Map<String, dynamic>?;
+  //
+  //     if (products != null && products.isNotEmpty) {
+  //       for (final entry in products.entries) {
+  //         final itemId = entry.key;
+  //         final productData = entry.value;
+  //
+  //         final quantity = productData['quantity'] ?? 1;
+  //         final category = productData['category'] ?? 'Unknown';
+  //
+  //         final itemDoc =
+  //             await doc.reference.collection('items').doc(itemId).get();
+  //         final price = itemDoc.data()?['price'] ?? 0;
+  //
+  //         final total = quantity * price;
+  //
+  //         spendingPerCategory[category] =
+  //             (spendingPerCategory[category] ?? 0) + total;
+  //       }
+  //     }
+  //   }
+  //
+  //   return spendingPerCategory;
+  // }
 
   Future<void> createNewList(String listName) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -390,98 +399,3 @@ class GrocerylistService {
         .delete();
   }
 }
-
-// Segédosztály a termék és mennyiség tárolásához
-// class ProductWithQuantity {
-//   final Product product;
-//   final int quantity;
-//
-//   ProductWithQuantity({
-//     required this.product,
-//     required this.quantity,
-//   });
-// }
-
-//ezeket meg lehet hogy fel lehet hasznalni
-
-// Stream<List<Product>> getItemsFromList(String listId) {
-//   return _db.collection('groceryLists').doc(listId).snapshots().asyncMap((listDoc) async {
-//     final productIds = (listDoc.data()?['products'] as List<dynamic>?)?.cast<String>() ?? [];
-//     if (productIds.isEmpty) return <Product>[];
-//
-//     final products = await _db.collection('productsKaufland')
-//         .where(FieldPath.documentId, whereIn: productIds)
-//         .get();
-//
-//     return products.docs.map((doc) => Product.fromFirestore(doc)).toList();
-//   });
-// }
-
-// Stream<List<Product>> getItemsFromList2(String listId) async* {
-//   final listDoc = await _db.collection('groceryLists').doc(listId).get();
-//   final productIds =
-//       (listDoc.data()?['products'] as List<dynamic>?)?.cast<String>() ?? [];
-//
-//   if (productIds.isEmpty) {
-//     yield [];
-//     return;
-//   }
-//
-//   yield* _db
-//       .collection('productsKaufland')
-//       .where(FieldPath.documentId, whereIn: productIds)
-//       .snapshots()
-//       .map((snapshot) => snapshot.docs.map((doc) {
-//     final data = doc.data();
-//     return Product(
-//       productUID: doc.id,
-//       productName: data['productName'],
-//       productImage: data['productImage'],
-//       productPrice: _parseDouble(data['productPrice']),
-//       productOldPrice: _parseDouble(data['productOldPrice']),
-//       productDiscount: data['productDiscount'],
-//       productSubtitle: data['productSubtitle'],
-//     );
-//   }).toList());
-// }
-
-// Frissített getItemsFromList metódus (figyeli a mennyiségeket is)
-// Stream<List<ProductWithQuantity>> getItemsFromList(String listId) {
-//   return _db
-//       .collection('groceryLists')
-//       .doc(listId)
-//       .snapshots()
-//       .asyncMap((listDoc) async {
-//     final productsMap =
-//         (listDoc.data()?['products'] as Map<String, dynamic>?) ?? {};
-//
-//     if (productsMap.isEmpty) {
-//       return <ProductWithQuantity>[];
-//     }
-//
-//     final productIds = productsMap.keys.toList();
-//
-//     final products = await _db
-//         .collection('productsKaufland')
-//         .where(FieldPath.documentId, whereIn: productIds)
-//         .get();
-//
-//     return products.docs.map((doc) {
-//       final data = doc.data();
-//       final quantity = productsMap[doc.id]?['quantity'] ?? 1;
-//
-//       return ProductWithQuantity(
-//         product: Product(
-//           productUID: doc.id,
-//           productName: data['productName'] ?? 'Névtelen termék',
-//           productImage: data['productImage'] ?? '',
-//           productPrice: _parseDouble(data['productPrice']),
-//           productOldPrice: _parseDouble(data['productOldPrice']),
-//           productDiscount: data['productDiscount'],
-//           productSubtitle: data['productSubtitle'],
-//         ),
-//         quantity: quantity,
-//       );
-//     }).toList();
-//   });
-// }

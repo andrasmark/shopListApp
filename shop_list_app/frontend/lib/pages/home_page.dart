@@ -36,8 +36,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadReminders();
-    _monthlyStatsFuture = _grocerylistService
-        .getMonthlySpendingPerCategoryFromReminders(_focusedMonth);
+    _monthlyStatsFuture =
+        _grocerylistService.getMonthlySpendingPerCategoryFromReminders(
+      _focusedMonth,
+      FirebaseAuth.instance.currentUser!.uid,
+    );
   }
 
   void _onNavBarItemTapped(int index) {
@@ -221,7 +224,9 @@ class _HomePageState extends State<HomePage> {
                         _focusedMonth = newMonth;
                         _monthlyStatsFuture = _grocerylistService
                             .getMonthlySpendingPerCategoryFromReminders(
-                                _focusedMonth);
+                          _focusedMonth,
+                          FirebaseAuth.instance.currentUser!.uid,
+                        );
                       });
                       _loadReminders();
                     }
