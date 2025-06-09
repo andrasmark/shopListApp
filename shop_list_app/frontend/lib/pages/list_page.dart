@@ -7,6 +7,7 @@ import '../components/groceryListCard.dart';
 import '../components/nav_bar.dart';
 import '../services/groceryLists_service.dart';
 import '../services/user_service.dart';
+import 'ai_grocery_page.dart';
 import 'groceryListPage.dart';
 import 'home_page.dart';
 
@@ -40,6 +41,9 @@ class _ListPageState extends State<ListPage> {
           break;
         case 2:
           Navigator.pushReplacementNamed(context, ItemsPage.id);
+          break;
+        case 3:
+          Navigator.pushReplacementNamed(context, AiGroceryPage.id);
           break;
       }
     });

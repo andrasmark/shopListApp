@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:shop_list_app/pages/ai_grocery_page.dart';
 import 'package:shop_list_app/pages/authentication/login_page.dart';
 import 'package:shop_list_app/pages/authentication/registration_page.dart';
 import 'package:shop_list_app/pages/home_page.dart';
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
         SplashPage.id: (context) => SplashPage(),
         RegistrationPage.id: (context) => RegistrationPage(),
         LoginPage.id: (context) => LoginPage(),
+        AiGroceryPage.id: (context) => AiGroceryPage(),
       },
     );
   }

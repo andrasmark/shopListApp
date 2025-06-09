@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_list_app/constants/color_scheme.dart';
+import 'package:shop_list_app/pages/ai_grocery_page.dart';
 import 'package:shop_list_app/pages/list_page.dart';
 import 'package:shop_list_app/pages/settings_page.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -61,6 +62,9 @@ class _HomePageState extends State<HomePage> {
           break;
         case 2:
           Navigator.pushReplacementNamed(context, ItemsPage.id);
+          break;
+        case 3:
+          Navigator.pushReplacementNamed(context, AiGroceryPage.id);
           break;
       }
     });

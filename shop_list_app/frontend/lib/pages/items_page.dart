@@ -8,6 +8,7 @@ import '../components/product/item_info.dart';
 import '../constants/color_scheme.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';
+import 'ai_grocery_page.dart';
 import 'list_page.dart';
 
 class ItemsPage extends StatefulWidget {
@@ -35,6 +36,9 @@ class _ItemsPageState extends State<ItemsPage> {
           break;
         case 1:
           Navigator.pushReplacementNamed(context, HomePage.id);
+          break;
+        case 3:
+          Navigator.pushReplacementNamed(context, AiGroceryPage.id);
           break;
       }
     });

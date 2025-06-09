@@ -29,6 +29,13 @@ BottomNavigationBar NavBar(
         ),
         label: 'Items',
       ),
+      BottomNavigationBarItem(
+        icon: Icon(
+          Icons.chat,
+          size: 30,
+        ),
+        label: 'Chat',
+      ),
     ],
   );
 }
