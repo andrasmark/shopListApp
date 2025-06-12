@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_list_app/pages/home_page.dart';
 
 import '../components/nav_bar.dart';
@@ -80,7 +81,13 @@ class _ItemsPageState extends State<ItemsPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text("Items"),
+        title: Text(
+          "Items",
+          style: GoogleFonts.notoSerif(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.white,
       ),
       body: Container(

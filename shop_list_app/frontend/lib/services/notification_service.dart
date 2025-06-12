@@ -27,12 +27,12 @@ class NotificationService {
   static Future<void> showTestNotification() async {
     await _notifications.show(
       0,
-      'Teszt értesítés',
-      'Ez egy azonnali értesítés.',
+      'Test notif',
+      'This is a test notif.',
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'test_channel',
-          'Teszt csatorna',
+          'Test channel',
           importance: Importance.max,
           priority: Priority.high,
         ),
@@ -66,8 +66,8 @@ class NotificationService {
 
     await _flutterLocalNotificationsPlugin.zonedSchedule(
       listId.hashCode, // Unique ID
-      'Bevásárlólista emlékeztető',
-      'Ekkor lesz a bevasarlas',
+      'Grocery list notification',
+      'Shopping is due to:',
       scheduledDate,
       const NotificationDetails(
         android: AndroidNotificationDetails(

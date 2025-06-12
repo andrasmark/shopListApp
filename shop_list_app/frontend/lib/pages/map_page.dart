@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shop_list_app/pages/settings_page.dart';
 import 'package:shop_list_app/services/groceryLists_service.dart';
@@ -26,6 +27,8 @@ class _MapPageState extends State<MapPage> {
   Polyline? _routePolyline;
   GrocerylistService _grocerylistService = GrocerylistService();
   bool _locationAllowed = true;
+  final List<String> stores = ['Kaufland', 'Lidl', 'Carrefour', 'Auchan'];
+  String _selectedStore = '';
 
   @override
   void initState() {
@@ -199,10 +202,17 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Map'),
+        title: Text(
+          'Map',
+          style: GoogleFonts.notoSerif(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
+            color: Colors.black,
             onPressed: () async {
               final settingsService = SettingsService();
               final locationEnabled =
@@ -248,75 +258,82 @@ class _MapPageState extends State<MapPage> {
               child: Column(
                 children: [
                   // Térkép kártya stílusban
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        width: double.infinity,
-                        child: _userLocation == null
-                            ? const Center(child: CircularProgressIndicator())
-                            : GoogleMap(
-                                initialCameraPosition: CameraPosition(
-                                  target: _userLocation!,
-                                  zoom: 15.0,
-                                ),
-                                onMapCreated: (controller) {
-                                  _googleMapController = controller;
-                                },
-                                polylines: _routePolyline != null
-                                    ? {_routePolyline!}
-                                    : {},
-                                myLocationEnabled: true,
-                                myLocationButtonEnabled: true,
-                                markers: {
-                                  Marker(
-                                    markerId: const MarkerId('user'),
-                                    position: _userLocation!,
-                                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                                        BitmapDescriptor.hueRed),
+                  Container(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          width: double.infinity,
+                          child: _userLocation == null
+                              ? const Center(child: CircularProgressIndicator())
+                              : GoogleMap(
+                                  initialCameraPosition: CameraPosition(
+                                    target: _userLocation!,
+                                    zoom: 15.0,
                                   ),
-                                  ..._lidlMarkers,
-                                },
-                              ),
+                                  onMapCreated: (controller) {
+                                    _googleMapController = controller;
+                                  },
+                                  polylines: _routePolyline != null
+                                      ? {_routePolyline!}
+                                      : {},
+                                  myLocationEnabled: true,
+                                  myLocationButtonEnabled: true,
+                                  markers: {
+                                    Marker(
+                                      markerId: const MarkerId('user'),
+                                      position: _userLocation!,
+                                      icon:
+                                          BitmapDescriptor.defaultMarkerWithHue(
+                                              BitmapDescriptor.hueRed),
+                                    ),
+                                    ..._lidlMarkers,
+                                  },
+                                ),
+                        ),
                       ),
                     ),
                   ),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          _searchNearbyStores('Lidl');
-                        },
-                        child: const Text('LIDL'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          _searchNearbyStores('Auchan');
-                        },
-                        child: const Text('AUCHAN'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          _searchNearbyStores('Carrefour');
-                        },
-                        child: const Text('CARREFOUR'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          _searchNearbyStores('Kaufland');
-                        },
-                        child: const Text('KAUFLAND'),
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: stores.map((store) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: FilterChip(
+                            label: Text(store),
+                            selected: _selectedStore == store,
+                            onSelected: (bool selected) {
+                              setState(() {
+                                _selectedStore = selected ? store : '';
+                                _searchNearbyStores(store);
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(180, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      backgroundColor: Colors.teal, // bckground
+                      foregroundColor: Colors.white, // text color
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     onPressed: () async {
                       print(
                           "START-----------------------------------------------------------------------------------------------------");
