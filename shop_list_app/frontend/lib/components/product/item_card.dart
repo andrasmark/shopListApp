@@ -24,8 +24,12 @@ class ItemCard extends StatelessWidget {
             ),
           if (product.productName != null)
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 4),
-              child: Text(product.productName!),
+              padding: EdgeInsets.all(6),
+              // padding: EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                product.productName!,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           if (product.productPrice != null)
             Text(

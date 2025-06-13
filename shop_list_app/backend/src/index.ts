@@ -1,5 +1,5 @@
 import express from "express";
-import { scrapeCarrefour, scrapeKaufland, scrapeLidl } from './scraping/scrape';
+import { scrapeCarrefour, scrapeKaufland, scrapeLidl, scrapeAuchan } from './scraping/scrape';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,9 +17,13 @@ app.get("/scrape", async (req, res) => {
   //await scrapeCarrefour();
   
   console.log("Adatok lekérése folyamatban... LIDL");
-  await scrapeLidl();
-  res.send("Scraping kész! Nézd meg a konzolt.");
+  //await scrapeLidl();
 
+  console.log("Adatok lekérése folyamatban... AUCHAN");
+  //await scrapeAuchan();
+
+  res.send("Scraping kész! Nézd meg a konzolt.");
+  console.log("Scraping kész!");
 });
 
 app.get("/api/products", (req, res) => {

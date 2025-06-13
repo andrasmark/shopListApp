@@ -51,6 +51,10 @@ class _ItemsPageState extends State<ItemsPage> {
         return _productService.getProductsFromKaufland();
       case 'Lidl':
         return _productService.getProductsFromLidl();
+      case 'Auchan':
+        return _productService.getProductsFromAuchan();
+      case 'Carrefour':
+        return _productService.getProductsFromCarrefour();
       default:
         return _productService.getProductsFromKaufland();
     }

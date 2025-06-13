@@ -117,45 +117,6 @@ class GrocerylistService {
     return spendingPerCategory;
   }
 
-  // Future<Map<String, double>> getMonthlySpendingPerCategoryFromReminders(
-  //     DateTime selectedMonth) async {
-  //   final start = DateTime(selectedMonth.year, selectedMonth.month);
-  //   final end = DateTime(selectedMonth.year, selectedMonth.month + 1);
-  //
-  //   final querySnapshot = await FirebaseFirestore.instance
-  //       .collection('groceryLists')
-  //       .where('reminder', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-  //       .where('reminder', isLessThan: Timestamp.fromDate(end))
-  //       .get();
-  //
-  //   Map<String, double> spendingPerCategory = {};
-  //
-  //   for (final doc in querySnapshot.docs) {
-  //     final products = doc.data()['products'] as Map<String, dynamic>?;
-  //
-  //     if (products != null && products.isNotEmpty) {
-  //       for (final entry in products.entries) {
-  //         final itemId = entry.key;
-  //         final productData = entry.value;
-  //
-  //         final quantity = productData['quantity'] ?? 1;
-  //         final category = productData['category'] ?? 'Unknown';
-  //
-  //         final itemDoc =
-  //             await doc.reference.collection('items').doc(itemId).get();
-  //         final price = itemDoc.data()?['price'] ?? 0;
-  //
-  //         final total = quantity * price;
-  //
-  //         spendingPerCategory[category] =
-  //             (spendingPerCategory[category] ?? 0) + total;
-  //       }
-  //     }
-  //   }
-  //
-  //   return spendingPerCategory;
-  // }
-
   Future<void> createNewList(String listName) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -234,6 +195,14 @@ class GrocerylistService {
       final lidlDoc = await _db.collection('productsLidl').doc(productId).get();
       if (lidlDoc.exists) return "Lidl";
 
+      final auchanDoc =
+          await _db.collection('productsAuchan').doc(productId).get();
+      if (auchanDoc.exists) return "Auchan";
+
+      final carrefourDoc =
+          await _db.collection('productsCarrefour').doc(productId).get();
+      if (carrefourDoc.exists) return "Carrefour";
+
       return null; // Product not found in either collection
     } catch (e) {
       debugPrint("Error getting store for product: $e");
@@ -265,8 +234,23 @@ class GrocerylistService {
           .where(FieldPath.documentId, whereIn: productIds)
           .get();
 
+      final auchanProducts = await _db
+          .collection('productsAuchan')
+          .where(FieldPath.documentId, whereIn: productIds)
+          .get();
+
+      final carrefourProducts = await _db
+          .collection('productsCarrefour')
+          .where(FieldPath.documentId, whereIn: productIds)
+          .get();
+
       // Combine results (note: same product shouldn't exist in both collections)
-      final allProducts = [...kauflandProducts.docs, ...lidlProducts.docs];
+      final allProducts = [
+        ...kauflandProducts.docs,
+        ...lidlProducts.docs,
+        ...auchanProducts.docs,
+        ...carrefourProducts.docs
+      ];
 
       // 4. Calculate total price
       double total = 0.0;
@@ -360,16 +344,30 @@ class GrocerylistService {
               whereIn: productList.map((p) => p.productUID).toList())
           .get();
 
+      final productsAuchan = await _db
+          .collection('productsAuchan')
+          .where(FieldPath.documentId,
+              whereIn: productList.map((p) => p.productUID).toList())
+          .get();
+
+      final productsCarrefour = await _db
+          .collection('productsCarrefour')
+          .where(FieldPath.documentId,
+              whereIn: productList.map((p) => p.productUID).toList())
+          .get();
+
       final allProducts = [
         ...productsKaufland.docs,
-        ...productsLidl.docs, // These overwrite Lidl products with same ID
+        ...productsLidl.docs,
+        ...productsAuchan.docs,
+        ...productsCarrefour.docs,
       ];
 
       return allProducts.map((doc) {
         final data = doc.data();
         return Product(
           productUID: doc.id,
-          productName: data['productName'] ?? 'Névtelen termék',
+          productName: data['productName'] ?? 'Unnamed product',
           productImage: data['productImage'] ?? '',
           productPrice: _parseDouble(data['productPrice']),
           productOldPrice: _parseDouble(data['productOldPrice']),

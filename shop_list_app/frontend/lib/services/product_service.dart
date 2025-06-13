@@ -165,6 +165,40 @@ class ProductService {
     });
   }
 
+  Stream<List<Product>> getProductsFromAuchan() {
+    return _db.collection("productsAuchan").snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Product(
+          productUID: doc.id,
+          productName: data['productName'],
+          productImage: data['productImage'],
+          productPrice: _parseDouble(data['productPrice']),
+          productOldPrice: _parseDouble(data['productOldPrice']),
+          productDiscount: null,
+          productSubtitle: null,
+        );
+      }).toList();
+    });
+  }
+
+  Stream<List<Product>> getProductsFromCarrefour() {
+    return _db.collection("productsCarrefour").snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Product(
+          productUID: doc.id,
+          productName: data['productName'],
+          productImage: data['productImage'],
+          productPrice: _parseDouble(data['productPrice']),
+          productOldPrice: _parseDouble(data['productOldPrice']),
+          productDiscount: data['productDiscount'],
+          productSubtitle: null,
+        );
+      }).toList();
+    });
+  }
+
   double? _parseDouble(dynamic value) {
     if (value == null) return null;
     if (value is double) return value;
