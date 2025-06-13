@@ -4,9 +4,8 @@ import { scrapeCarrefour, scrapeKaufland, scrapeLidl, scrapeAuchan } from './scr
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Alapértelmezett route
 app.get("/", (req, res) => {
-    res.send("Hello, world!");  // Válasz küldése a gyökérre
+    res.send("Hello, world!");  
   });
 
 app.get("/scrape", async (req, res) => {
@@ -14,7 +13,7 @@ app.get("/scrape", async (req, res) => {
   //await scrapeKaufland();
   
   console.log("Adatok lekérése folyamatban... CARREFOUR");
-  //await scrapeCarrefour();
+  // await scrapeCarrefour();
   
   console.log("Adatok lekérése folyamatban... LIDL");
   //await scrapeLidl();

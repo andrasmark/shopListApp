@@ -7,31 +7,38 @@ export async function scrapeKaufland() {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
-  // User agent beállítása
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+  await page.setUserAgent(
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  );
 
   try {
     await page.goto(
-      "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.category=01_Carne__mezeluri.html"
+      "https://www.kaufland.ro/oferte/oferte-saptamanale/saptamana-curenta.category=01_Carne__mezeluri.html",
+      { waitUntil: "networkidle0" } // vagy "domcontentloaded"
     );
 
-    // Termékadatok kinyerése
+    // Várakozás egy konkrét elemre, ami biztosan betöltődik (pl. egy termék)
+    await page.waitForSelector(".k-product-tile__main", { timeout: 10000 });
+
+    await autoScroll(page);
+
     const products = await page.evaluate(() => {
-      const items = document.querySelectorAll(".k-product-grid__item");
+      const items = document.querySelectorAll(".k-product-tile__main");
+
       return Array.from(items).map((product) => {
         const nameElement = product.querySelector(".k-product-tile__title");
         const subtitleElement = product.querySelector(".k-product-tile__subtitle");
-        const priceElement = product.querySelector(".k-price-tag__price");
-        const oldPriceElement = product.querySelector(".k-price-tag__old-price");
-        const discountElement = product.querySelector(".k-price-tag__discount");
-        const imageElement = product.querySelector(".k-product-tile__main-image");
+        const priceElement = product.querySelector(".k-price-tag__price") as HTMLElement ;
+        const oldPriceElement = product.querySelector(".k-price-tag__old-price-line-through") as HTMLElement ;
+        const discountElement = product.querySelector(".k-price-tag__discount") as HTMLElement;
+        const imageElement = product.querySelector("img");
 
         return {
           name: nameElement?.textContent?.trim() || "N/A",
           subtitle: subtitleElement?.textContent?.trim() || "N/A",
-          price: priceElement?.textContent?.trim() || "N/A",
-          oldPrice: oldPriceElement?.textContent?.trim() || "N/A",
-          discount: discountElement?.textContent?.trim() || "N/A",
+          price: priceElement?.innerText?.trim().replace(/\s*LEI\s*/i, '') || "N/A",
+          oldPrice: oldPriceElement?.innerText?.trim() || "N/A",
+          discount: discountElement?.innerText?.trim() || "N/A",
           image: imageElement?.getAttribute("src") || "N/A",
         };
       });
@@ -39,7 +46,7 @@ export async function scrapeKaufland() {
 
     console.log("Lekért termékek KAUFLAND:", products);
 
-    //await saveKAUFLANDProductsToFirestore(products);
+    // await saveKAUFLANDProductsToFirestore(products);
     console.log("Termékek sikeresen feltöltve a Firestore-ba!");
   } catch (error) {
     console.error("Hiba történt a scraping során KAUFLAND:", error);
@@ -48,6 +55,7 @@ export async function scrapeKaufland() {
   }
 }
 
+
 export async function scrapeLidl() {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
@@ -55,17 +63,7 @@ export async function scrapeLidl() {
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
 
   try {
-    await page.goto("https://www.lidl.ro/c/oferte-de-luni/a10073121?channel=store&tabCode=Current_Sales_Week", { waitUntil: "networkidle2" }); // vár az oldal teljes betöltésére
-
-    // Süti elfogadás gomb (ha szükséges)
-    // try {
-    //   await page.waitForSelector(".cookie-alert-extended-button", { timeout: 10000 });
-    //   await page.click(".cookie-alert-extended-button");
-    // } catch (error) {
-    //   console.log("Nincs süti elfogadás gomb, vagy nem található.");
-    // }
-
-    // Görgetés az összes termék betöltéséhez
+    await page.goto("https://www.lidl.ro/c/oferte-de-luni/a10073121?channel=store&tabCode=Current_Sales_Week", { waitUntil: "networkidle2" }); 
     await autoScroll(page);
     
     // Várj, amíg a termékek betöltődnek
@@ -133,7 +131,6 @@ export async function scrapeCarrefour() {
     await page.goto("https://carrefour.ro/", { waitUntil: "networkidle2" });
 
     await autoScroll(page);
-    //await page.waitForSelector(".product-card", { timeout: 10000 });
 
     const products = await page.evaluate(() => {
        const normalizePrice = (priceStr: string) => {
@@ -188,45 +185,8 @@ export async function scrapeCarrefour() {
   }
 }
 
-async function saveCARREFOURProductsToFirestore(products: any[]) {
-  const batch = db.batch();
-  products.forEach((product) => {
-    const productRef = db.collection("productsCarrefour").doc();
 
-    // const price = parseFloat(product.price.replace(',', '.')) || 0;
-    // const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
-
-    batch.set(productRef, {
-      productName: product.name,
-      productPrice: product.price,
-      productOldPrice: product.oldPrice,
-      productDiscount: product.discount,
-      productImage: product.image,
-    });
-  });
-  await batch.commit();
-}
   
-
-
-  // Termékek mentése Firestore-ba
-// async function saveProductsToFirestore(products: any[]) {
-//   const batch = db.batch();
-//   products.forEach((product) => {
-//     const productRef = db.collection("products").doc(); // Automatikus ID
-//     batch.set(productRef, product);
-//   });
-//   await batch.commit();
-// }
-
-// // Scrape és mentés
-// async function scrapeAndSave() {
-//   const products = await scrapeLidlProducts();
-//   await saveProductsToFirestore(products);
-//   console.log("Termékek sikeresen feltöltve!");
-// }
-
-// scrapeAndSave();
 export async function scrapeAuchan() {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
@@ -266,63 +226,323 @@ export async function scrapeAuchan() {
   }
 }
 
+// async function saveCARREFOURProductsToFirestore(products: any[]) {
+//   const batch = db.batch();
+//   products.forEach((product) => {
+//     const productRef = db.collection("productsCarrefour").doc();
+
+
+//     batch.set(productRef, {
+//       productName: product.name,
+//       productPrice: product.price,
+//       productOldPrice: product.oldPrice,
+//       productDiscount: product.discount,
+//       productImage: product.image,
+//     });
+//   });
+//   await batch.commit();
+// }
+
+async function saveCARREFOURProductsToFirestore(products: any[]) {
+  const collectionRef = db.collection("productsCarrefour");
+
+  // 1️⃣ Előző kedvezmények visszaállítása (ha voltak)
+  const allProductsSnapshot = await collectionRef.get();
+  const resetBatch = db.batch();
+
+  allProductsSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.productOldPrice && data.productOldPrice > 0) {
+      resetBatch.update(doc.ref, {
+        productPrice: data.productOldPrice,
+        productOldPrice: 0,
+        productDiscount: null,
+      });
+      console.log(`Resetelve akció: ${data.productName}`);
+    }
+  });
+
+  await resetBatch.commit();
+  console.log("CARREFOUR: korábbi akciók visszaállítva.");
+
+  // 2️⃣ Új termékek frissítése vagy hozzáadása
+  const updateBatch = db.batch();
+
+  for (const product of products) {
+    const snapshot = await collectionRef
+      .where("productName", "==", product.name)
+      .limit(1)
+      .get();
+
+    const discount = product.oldPrice > product.price
+      ? `-${Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%`
+      : null;
+
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      updateBatch.update(doc.ref, {
+        productPrice: product.price,
+        productOldPrice: product.oldPrice,
+        productDiscount: discount,
+        productImage: product.image,
+      });
+      console.log(`Frissítve: ${product.name}`);
+    } else {
+      const docRef = collectionRef.doc();
+      updateBatch.set(docRef, {
+        productName: product.name,
+        productPrice: product.price,
+        productOldPrice: product.oldPrice,
+        productDiscount: discount,
+        productImage: product.image,
+      });
+      console.log(`Új termék: ${product.name}`);
+    }
+  }
+
+  await updateBatch.commit();
+  console.log("CARREFOUR: új termékek mentve.");
+}
+
+
+// async function saveAUCHANProductsToFirestore(products: any[]) {
+//   const batch = db.batch();
+//   products.forEach((product) => {
+//     const productRef = db.collection("productsAuchan").doc();
+
+//     const price = parseFloat(product.price.replace(',', '.')) || 0;
+//     const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
+
+//     batch.set(productRef, {
+//       productName: product.name,
+//       productPrice: price,
+//       productOldPrice: oldPrice,
+//       productDiscount: null, //product.discount,
+//       productImage: product.image,
+//     });
+//   });
+//   await batch.commit();
+// }
+
 async function saveAUCHANProductsToFirestore(products: any[]) {
-  const batch = db.batch();
-  products.forEach((product) => {
-    const productRef = db.collection("productsAuchan").doc();
+  const collectionRef = db.collection("productsAuchan");
 
+  // 1️⃣ Előző kedvezmények resetelése
+  const allProductsSnapshot = await collectionRef.get();
+  const resetBatch = db.batch();
+
+  allProductsSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.productOldPrice && data.productOldPrice > 0) {
+      resetBatch.update(doc.ref, {
+        productPrice: data.productOldPrice,
+        productOldPrice: 0,
+        productDiscount: null
+      });
+      console.log(`Resetelve akció: ${data.productName}`);
+    }
+  });
+
+  await resetBatch.commit();
+  console.log("AUCHAN: korábbi akciók visszaállítva.");
+
+  // 2️⃣ Új akciók és termékek mentése
+  const updateBatch = db.batch();
+
+  for (const product of products) {
     const price = parseFloat(product.price.replace(',', '.')) || 0;
     const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
 
-    batch.set(productRef, {
-      productName: product.name,
-      productPrice: price,
-      productOldPrice: oldPrice,
-      productDiscount: null, //product.discount,
-      productImage: product.image,
-    });
-  });
-  await batch.commit();
+    const snapshot = await collectionRef
+      .where("productName", "==", product.name)
+      .limit(1)
+      .get();
+
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      updateBatch.update(doc.ref, {
+        productPrice: price,
+        productOldPrice: oldPrice,
+        productDiscount: oldPrice > price ? `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%` : null,
+        productImage: product.image,
+      });
+      console.log(`Frissítve: ${product.name}`);
+    } else {
+      const docRef = collectionRef.doc();
+      updateBatch.set(docRef, {
+        productName: product.name,
+        productPrice: price,
+        productOldPrice: oldPrice,
+        productDiscount: oldPrice > price ? `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%` : null,
+        productImage: product.image,
+      });
+      console.log(`Új termék: ${product.name}`);
+    }
+  }
+
+  await updateBatch.commit();
+  console.log("AUCHAN: új termékek mentve.");
 }
 
+// async function saveKAUFLANDProductsToFirestore(products: any[]) {
+//   const batch = db.batch();
+//   products.forEach((product) => {
+//     const productRef = db.collection("productsKaufland").doc(); // Automatikus ID
 
+//     // ar converalasa double-re
+//     const price = parseFloat(product.price.replace(',', '.')) || 0;
+//     const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
+
+//     batch.set(productRef, {
+//       productDiscount: product.discount,
+//       productImage: product.image,
+//       productName: product.name,
+//       productOldPrice: oldPrice,
+//       productPrice: price,
+//       productSubtitle: product.subtitle,
+//     });
+//   });
+//   await batch.commit();
+// }
 async function saveKAUFLANDProductsToFirestore(products: any[]) {
-  const batch = db.batch();
-  products.forEach((product) => {
-    const productRef = db.collection("productsKaufland").doc(); // Automatikus ID
+  const collectionRef = db.collection("productsKaufland");
 
-    // ar converalasa double-re
+  // 1️⃣ Először reseteljük a meglévő akciókat
+  const allProductsSnapshot = await collectionRef.get();
+  const resetBatch = db.batch();
+
+  allProductsSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.productOldPrice && data.productOldPrice > 0) {
+      resetBatch.update(doc.ref, {
+        productPrice: data.productOldPrice,
+        productOldPrice: 0,
+        productDiscount: null
+      });
+      console.log(`Resetelve akció: ${data.productName}`);
+    }
+  });
+
+  await resetBatch.commit();
+  console.log("KAUFLAND: korábbi akciók visszaállítva.");
+
+  // 2️⃣ Új adatok mentése / frissítése
+  const updateBatch = db.batch();
+
+  for (const product of products) {
     const price = parseFloat(product.price.replace(',', '.')) || 0;
     const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
 
-    batch.set(productRef, {
-      productDiscount: product.discount,
-      productImage: product.image,
-      productName: product.name,
-      productOldPrice: oldPrice,
-      productPrice: price,
-      productSubtitle: product.subtitle,
-    });
-  });
-  await batch.commit();
+    const snapshot = await collectionRef
+      .where("productName", "==", product.name)
+      .limit(1)
+      .get();
+
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      updateBatch.update(doc.ref, {
+        productPrice: price,
+        productOldPrice: oldPrice,
+        productDiscount: product.discount,
+        productImage: product.image,
+        productSubtitle: product.subtitle,
+      });
+      console.log(`Frissítve: ${product.name}`);
+    } else {
+      const docRef = collectionRef.doc();
+      updateBatch.set(docRef, {
+        productName: product.name,
+        productPrice: price,
+        productOldPrice: oldPrice,
+        productDiscount: product.discount,
+        productImage: product.image,
+        productSubtitle: product.subtitle,
+      });
+      console.log(`Új termék: ${product.name}`);
+    }
+  }
+
+  await updateBatch.commit();
+  console.log("KAUFLAND: új termékek mentve.");
 }
+
+
+// async function saveLIDLProductsToFirestore(products: any[]) {
+//   const batch = db.batch();
+//   products.forEach((product) => {
+//     const productRef = db.collection("productsLidl").doc(); // Automatikus ID
+
+//     // ar converalasa double-re
+//     const price = parseFloat(product.price.replace(',', '.')) || 0;
+//     const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
+
+//     batch.set(productRef, {
+//       productName: product.name,
+//       productPrice: price,
+//       productOldPrice: oldPrice,
+//       productDiscount: product.discount,
+//       productImage: product.image,
+//     });
+//   });
+//   await batch.commit();
+// }
 
 async function saveLIDLProductsToFirestore(products: any[]) {
-  const batch = db.batch();
-  products.forEach((product) => {
-    const productRef = db.collection("productsLidl").doc(); // Automatikus ID
+  const collectionRef = db.collection("productsLidl");
 
-    // ar converalasa double-re
+  // 1️⃣ Először reseteljük az összes termék akciós állapotát
+  const allProductsSnapshot = await collectionRef.get();
+  const resetBatch = db.batch();
+
+  allProductsSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.productOldPrice && data.productOldPrice > 0) {
+      resetBatch.update(doc.ref, {
+        productPrice: data.productOldPrice,
+        productOldPrice: 0,
+        productDiscount: null
+      });
+      console.log(`Resetelve korábbi akció: ${data.productName}`);
+    }
+  });
+
+  await resetBatch.commit();
+  console.log("Összes korábbi akció resetelve.");
+
+  // 2️⃣ Új adatok feldolgozása
+  const updateBatch = db.batch();
+
+  for (const product of products) {
     const price = parseFloat(product.price.replace(',', '.')) || 0;
     const oldPrice = parseFloat(product.oldPrice.replace(',', '.')) || 0;
 
-    batch.set(productRef, {
-      productName: product.name,
-      productPrice: price,
-      productOldPrice: oldPrice,
-      productDiscount: product.discount,
-      productImage: product.image,
-    });
-  });
-  await batch.commit();
+    const snapshot = await collectionRef
+      .where("productName", "==", product.name)
+      .limit(1)
+      .get();
+
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      updateBatch.update(doc.ref, {
+        productPrice: price,
+        productOldPrice: oldPrice,
+        productDiscount: product.discount,
+        productImage: product.image, // opcionálisan frissíted
+      });
+      console.log(`Frissítve meglévő termék: ${product.name}`);
+    } else {
+      const docRef = collectionRef.doc();
+      updateBatch.set(docRef, {
+        productName: product.name,
+        productPrice: price,
+        productOldPrice: oldPrice,
+        productDiscount: product.discount,
+        productImage: product.image,
+      });
+      console.log(`Új termék mentve: ${product.name}`);
+    }
+  }
+
+  await updateBatch.commit();
+  console.log("Új termékadatok mentve Firestore-ba.");
 }
