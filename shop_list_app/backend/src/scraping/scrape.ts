@@ -199,6 +199,18 @@ export async function scrapeAuchan() {
     //await page.waitForSelector(".products__list__item", { timeout: 10000 });
 
     const products = await page.evaluate(() => {
+      const normalizePrice = (priceStr: string) => {
+        if (!priceStr) return 0;
+        const cleaned = priceStr
+          .replace(/[^0-9\s]/g, "")
+          .trim()
+          .split(/\s+/);
+        if (cleaned.length === 2) {
+          return parseFloat(`${cleaned[0]}.${cleaned[1]}`);
+        }
+        return parseFloat(cleaned[0]) || 0;
+      };
+
       const items = document.querySelectorAll(".vtex-search-result-3-x-galleryItem");
       return Array.from(items).map((product) => {
         const nameElement = product.querySelector(".vtex-product-summary-2-x-productBrand ");
@@ -207,11 +219,23 @@ export async function scrapeAuchan() {
         //const discountElement = product.querySelector(".product__label--discount");
         const imageElement = product.querySelector(".vtex-product-summary-2-x-imageNormal");
 
+        const priceRaw = priceElement?.textContent?.trim() || "";
+        const oldPriceRaw = oldPriceElement?.textContent?.trim() || "";
+
+        const price = normalizePrice(priceRaw);
+        const oldPrice = normalizePrice(oldPriceRaw);
+
+        let discount = null;
+        if (oldPrice > 0 && price > 0 && oldPrice > price) {
+          const percent = ((oldPrice - price) / oldPrice) * 100;
+          discount = `-${percent.toFixed(0)}%`;
+        }
+
         return {
           name: nameElement?.textContent?.trim() || "N/A",
           price: priceElement?.textContent?.trim() || "N/A",
           oldPrice: oldPriceElement?.textContent?.trim() || "N/A",
-          //discount: discountElement?.textContent?.trim() || "N/A",
+          discount: discount,
           image: imageElement?.getAttribute("src") || "N/A",
         };
       });
@@ -358,12 +382,16 @@ async function saveAUCHANProductsToFirestore(products: any[]) {
       .limit(1)
       .get();
 
+    const discount = oldPrice > price
+    ? `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%`
+    : null;
+
     if (!snapshot.empty) {
       const doc = snapshot.docs[0];
       updateBatch.update(doc.ref, {
         productPrice: price,
         productOldPrice: oldPrice,
-        productDiscount: oldPrice > price ? `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%` : null,
+        productDiscount: discount,
         productImage: product.image,
       });
       console.log(`Frissítve: ${product.name}`);
@@ -373,7 +401,7 @@ async function saveAUCHANProductsToFirestore(products: any[]) {
         productName: product.name,
         productPrice: price,
         productOldPrice: oldPrice,
-        productDiscount: oldPrice > price ? `-${Math.round(((oldPrice - price) / oldPrice) * 100)}%` : null,
+        productDiscount: discount,
         productImage: product.image,
       });
       console.log(`Új termék: ${product.name}`);

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_list_app/constants/color_scheme.dart';
 
 class RecommendedListsPage extends StatefulWidget {
@@ -46,6 +47,9 @@ class _RecommendedListsPageState extends State<RecommendedListsPage> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("Close"),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.teal,
+            ),
           ),
         ],
       ),
@@ -55,7 +59,16 @@ class _RecommendedListsPageState extends State<RecommendedListsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Saved AI Lists")),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Text(
+          "Saved AI Lists",
+          style: GoogleFonts.notoSerif(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
       body: Container(
         color: COLOR_BEIGE,
         child: Padding(

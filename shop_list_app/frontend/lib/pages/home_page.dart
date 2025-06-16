@@ -46,7 +46,6 @@ class _HomePageState extends State<HomePage> {
         user.uid,
       );
     } else {
-      // Guest esetén pl. üres adat vagy Future.value({})
       _monthlyStatsFuture = Future.value({});
     }
 
@@ -135,6 +134,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         title: Text(
           "Welcome to Grocely!",
@@ -318,7 +318,7 @@ class _HomePageState extends State<HomePage> {
                       shape: BoxShape.circle,
                     ),
                     selectedDecoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.teal,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -401,11 +401,12 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Spending for each category this month:',
+                                //'Spending for each category this month:',
+                                '',
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold, fontSize: 16),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 60),
                               ...data.entries.map(
                                 (entry) => ListTile(
                                   dense: true,

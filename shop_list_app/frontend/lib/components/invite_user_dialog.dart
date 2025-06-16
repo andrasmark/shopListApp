@@ -115,10 +115,17 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.teal,
+          ),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _inviteUser,
           child: const Text('Invite'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+          ),
         ),
       ],
     );

@@ -28,6 +28,8 @@ class ItemCard extends StatelessWidget {
               // padding: EdgeInsets.symmetric(vertical: 4),
               child: Text(
                 product.productName!,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -40,7 +42,7 @@ class ItemCard extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(top: 4),
               child: Text(
-                'Discount: ${product.productDiscount}',
+                '${product.productDiscount}',
                 style: TextStyle(color: Colors.green),
               ),
             ),

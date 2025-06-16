@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shop_list_app/constants/color_scheme.dart';
 import 'package:shop_list_app/pages/settings_page.dart';
 import 'package:shop_list_app/services/groceryLists_service.dart';
 import 'package:shop_list_app/services/map_service.dart';
@@ -202,6 +203,7 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(
           'Map',
           style: GoogleFonts.notoSerif(
@@ -229,8 +231,11 @@ class _MapPageState extends State<MapPage> {
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text("Cancel"),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.teal,
+                      ),
                     ),
-                    TextButton(
+                    ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).pop();
                         Navigator.push(
@@ -241,6 +246,10 @@ class _MapPageState extends State<MapPage> {
                         );
                       },
                       child: const Text("Settings"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                      ),
                     ),
                   ],
                 ),
@@ -249,140 +258,146 @@ class _MapPageState extends State<MapPage> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          AbsorbPointer(
-            absorbing: !_locationAllowed,
-            child: Opacity(
-              opacity: _locationAllowed ? 1.0 : 0.3,
-              child: Column(
-                children: [
-                  // Térkép kártya stílusban
-                  Container(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.6,
-                          width: double.infinity,
-                          child: _userLocation == null
-                              ? const Center(child: CircularProgressIndicator())
-                              : GoogleMap(
-                                  initialCameraPosition: CameraPosition(
-                                    target: _userLocation!,
-                                    zoom: 15.0,
-                                  ),
-                                  onMapCreated: (controller) {
-                                    _googleMapController = controller;
-                                  },
-                                  polylines: _routePolyline != null
-                                      ? {_routePolyline!}
-                                      : {},
-                                  myLocationEnabled: true,
-                                  myLocationButtonEnabled: true,
-                                  markers: {
-                                    Marker(
-                                      markerId: const MarkerId('user'),
-                                      position: _userLocation!,
-                                      icon:
-                                          BitmapDescriptor.defaultMarkerWithHue(
-                                              BitmapDescriptor.hueRed),
-                                    ),
-                                    ..._lidlMarkers,
-                                  },
-                                ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: stores.map((store) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: FilterChip(
-                            label: Text(store),
-                            selected: _selectedStore == store,
-                            onSelected: (bool selected) {
-                              setState(() {
-                                _selectedStore = selected ? store : '';
-                                _searchNearbyStores(store);
-                              });
-                            },
+      body: Container(
+        color: COLOR_BEIGE,
+        child: Stack(
+          children: [
+            AbsorbPointer(
+              absorbing: !_locationAllowed,
+              child: Opacity(
+                opacity: _locationAllowed ? 1.0 : 0.3,
+                child: Column(
+                  children: [
+                    // Térkép kártya stílusban
+                    Container(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        );
-                      }).toList(),
+                          clipBehavior: Clip.antiAlias,
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            width: double.infinity,
+                            child: _userLocation == null
+                                ? const Center(
+                                    child: CircularProgressIndicator())
+                                : GoogleMap(
+                                    initialCameraPosition: CameraPosition(
+                                      target: _userLocation!,
+                                      zoom: 15.0,
+                                    ),
+                                    onMapCreated: (controller) {
+                                      _googleMapController = controller;
+                                    },
+                                    polylines: _routePolyline != null
+                                        ? {_routePolyline!}
+                                        : {},
+                                    myLocationEnabled: true,
+                                    myLocationButtonEnabled: true,
+                                    markers: {
+                                      Marker(
+                                        markerId: const MarkerId('user'),
+                                        position: _userLocation!,
+                                        icon: BitmapDescriptor
+                                            .defaultMarkerWithHue(
+                                                BitmapDescriptor.hueRed),
+                                      ),
+                                      ..._lidlMarkers,
+                                    },
+                                  ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(180, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      backgroundColor: Colors.teal, // bckground
-                      foregroundColor: Colors.white, // text color
-                      textStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    onPressed: () async {
-                      print(
-                          "START-----------------------------------------------------------------------------------------------------");
-                      final groceryList = widget.groceryList!;
-                      final requiredStores = await _grocerylistService
-                          .getStoresForList(groceryList);
-                      _drawRouteToStores(requiredStores);
-                      print(groceryList);
-                      print(requiredStores);
-                      print(
-                          "END-----------------------------------------------------------------------------------------------------");
-                    },
-                    child: const Text('Show Route'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (!_locationAllowed)
-            Container(
-              color: Colors.black.withOpacity(0.6),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Location is disabled.\nPlease go to settings to enable it.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const SettingsPage()),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: stores.map((store) {
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: FilterChip(
+                              label: Text(store),
+                              selected: _selectedStore == store,
+                              selectedColor: Colors.teal,
+                              onSelected: (bool selected) {
+                                setState(() {
+                                  _selectedStore = selected ? store : '';
+                                  _searchNearbyStores(store);
+                                });
+                              },
+                            ),
                           );
-                        },
-                        child: const Text('Go to Settings'),
+                        }).toList(),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(180, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () async {
+                        print(
+                            "START-----------------------------------------------------------------------------------------------------");
+                        final groceryList = widget.groceryList!;
+                        final requiredStores = await _grocerylistService
+                            .getStoresForList(groceryList);
+                        _drawRouteToStores(requiredStores);
+                        print(groceryList);
+                        print(requiredStores);
+                        print(
+                            "END-----------------------------------------------------------------------------------------------------");
+                      },
+                      child: const Text('Show Route'),
+                    ),
+                  ],
                 ),
               ),
             ),
-        ],
+            if (!_locationAllowed)
+              Container(
+                color: Colors.black.withOpacity(0.6),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Location is disabled.\nPlease go to settings to enable it.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SettingsPage()),
+                            );
+                          },
+                          child: const Text('Go to Settings'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

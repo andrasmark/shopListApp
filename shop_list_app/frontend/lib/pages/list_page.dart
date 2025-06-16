@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_list_app/constants/color_scheme.dart';
 import 'package:shop_list_app/pages/items_page.dart';
 import 'package:shop_list_app/services/authorization.dart';
@@ -25,16 +27,21 @@ class _ListPageState extends State<ListPage> {
   final GrocerylistService _grocerylistService = GrocerylistService();
   String? _userId;
   int _selectedIndex = 0;
+  String _selectedFilter = 'All';
+  late Future<List<Map<String, dynamic>>> _groceryListsFuture;
+  final List<String> _filters = ['All', 'Favourites', 'Scheduled'];
 
   @override
   void initState() {
     super.initState();
     _userId = _authService.getUserId();
+    if (_userId != null) {
+      _groceryListsFuture = _userService.getUserGroceryLists(_userId!);
+    }
   }
 
   void _onNavBarItemTapped(int index) {
     setState(() {
-      // _selectedIndex = index;
       switch (index) {
         case 1:
           Navigator.pushReplacementNamed(context, HomePage.id);
@@ -53,88 +60,162 @@ class _ListPageState extends State<ListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
-        title: Text("My Grocery Lists"),
+        title: Text(
+          "My Grocery Lists",
+          style: GoogleFonts.notoSerif(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Container(
         color: COLOR_BEIGE,
         child: _userId == null
             ? Center(child: Text("Please log in to see your grocery lists."))
-            : FutureBuilder<List<Map<String, dynamic>>>(
-                future: _userService.getUserGroceryLists(_userId!),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('No grocery lists found.'));
-                  } else {
-                    final groceryLists = snapshot.data!;
-                    return ListView.builder(
-                      itemCount: groceryLists.length,
-                      itemBuilder: (context, index) {
-                        final list = groceryLists[index];
-                        return GestureDetector(
-                          onLongPress: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                String newListName = '';
-
-                                return AlertDialog(
-                                  title: const Text(
-                                      'Do you want to create a copy of this list?'),
-                                  content: TextField(
-                                    decoration: const InputDecoration(
-                                        labelText: 'New list name'),
-                                    onChanged: (value) {
-                                      newListName = value;
-                                    },
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () async {
-                                        Navigator.pop(context);
-                                        await _grocerylistService
-                                            .createCopyOfGroceryListWithName(
-                                          originalListId: list['id'],
-                                          newName: newListName.isNotEmpty
-                                              ? newListName
-                                              : 'Copied List',
-                                          userId: _userId!,
-                                        );
-                                        setState(() {});
-                                      },
-                                      child: const Text('Copy'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                          child: GroceryListCard(
-                            listId: list['id'],
-                            listName: list['listName'] ?? 'Unnamed List',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      GroceryListPage(listId: list['id']),
-                                ),
-                              );
+            : Column(
+                children: [
+                  // Filter chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 10),
+                    child: Row(
+                      children: _filters.map((filter) {
+                        final bool isSelected = _selectedFilter == filter;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: FilterChip(
+                            label: Text(filter),
+                            selected: _selectedFilter == filter,
+                            selectedColor: Colors.teal,
+                            onSelected: (bool selected) {
+                              setState(() {
+                                _selectedFilter = selected ? filter : 'All';
+                              });
                             },
                           ),
                         );
+                      }).toList(),
+                    ),
+                  ),
+                  // List content
+                  Expanded(
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      //future: _userService.getUserGroceryLists(_userId!),
+                      future: _groceryListsFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${snapshot.error}'));
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return Center(child: Text('No grocery lists found.'));
+                        } else {
+                          final allLists = snapshot.data!;
+                          List<Map<String, dynamic>> filteredLists = allLists;
+
+                          if (_selectedFilter == 'Favourites') {
+                            filteredLists = allLists
+                                .where((list) => list['favourite'] == true)
+                                .toList();
+                          } else if (_selectedFilter == 'Scheduled') {
+                            filteredLists = allLists.where((list) {
+                              final reminder = list['reminder'];
+                              if (reminder != null && reminder is Timestamp) {
+                                return reminder
+                                    .toDate()
+                                    .isAfter(DateTime.now());
+                              }
+                              return false;
+                            }).toList();
+                          }
+
+                          return ListView.builder(
+                            itemCount: filteredLists.length,
+                            itemBuilder: (context, index) {
+                              final list = filteredLists[index];
+                              final reminderTimestamp = list['reminder'];
+                              final reminderDate = reminderTimestamp != null
+                                  ? (reminderTimestamp as Timestamp).toDate()
+                                  : null;
+
+                              return GestureDetector(
+                                onLongPress: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      String newListName = '';
+
+                                      return AlertDialog(
+                                        title: const Text(
+                                            'Do you want to create a copy of this list?'),
+                                        content: TextField(
+                                          decoration: const InputDecoration(
+                                              labelText: 'New list name'),
+                                          onChanged: (value) {
+                                            newListName = value;
+                                          },
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () async {
+                                              Navigator.pop(context);
+                                              await _grocerylistService
+                                                  .createCopyOfGroceryListWithName(
+                                                originalListId: list['id'],
+                                                newName: newListName.isNotEmpty
+                                                    ? newListName
+                                                    : 'Copied List',
+                                                userId: _userId!,
+                                              );
+                                              setState(() {});
+                                            },
+                                            child: const Text('Copy'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                                child: GroceryListCard(
+                                  listId: list['id'],
+                                  listName: list['listName'] ?? 'Unnamed List',
+                                  reminder: reminderDate,
+                                  isFavourite: list['favourite'] == true,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            GroceryListPage(listId: list['id']),
+                                      ),
+                                    );
+                                    if (_userId != null) {
+                                      setState(() {
+                                        _groceryListsFuture = _userService
+                                            .getUserGroceryLists(_userId!);
+                                      });
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          );
+                        }
                       },
-                    );
-                  }
-                },
+                    ),
+                  ),
+                ],
               ),
       ),
       bottomNavigationBar: NavBar(_selectedIndex, _onNavBarItemTapped),

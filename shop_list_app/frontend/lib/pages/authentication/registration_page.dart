@@ -34,7 +34,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 MaterialPageRoute(builder: (context) => const HomePage()),
               );
             },
-            child: const Text("Skip"),
+            child: const Text(
+              "Skip",
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -81,18 +87,29 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 height: 24.0,
               ),
               RoundedButton(
-                colour: Colors.blueAccent,
+                colour: Colors.teal,
                 title: 'Register',
                 onPress: () async {
+                  if (!email.contains('@') || password.length < 6) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Please enter a valid email and a password with at least 6 characters.'),
+                      ),
+                    );
+                    setState(() {
+                      email = '';
+                      password = '';
+                    });
+                    return;
+                  }
+
                   setState(() {
                     showSpinner = true;
                   });
 
                   try {
                     final newUser = await authService.register(email, password);
-                    // if (newUser != null) {
-                    //   await userService.addUser(newUser.uid, email);
-                    // }
 
                     Navigator.pushReplacementNamed(context, HomePage.id);
                   } catch (e) {
@@ -101,6 +118,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         content: Text('Invalid email or password'),
                       ),
                     );
+                    setState(() {
+                      email = '';
+                      password = '';
+                    });
+                    return;
                     print(e);
                   } finally {
                     setState(() {
@@ -131,7 +153,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     child: Text(
                       'Try to log in!',
                       style: TextStyle(
-                        color: Colors.blue,
+                        color: Colors.teal,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

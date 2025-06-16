@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shop_list_app/constants/color_scheme.dart';
 
 import '../components/groceryListItem/groceryListItemCard.dart';
@@ -28,6 +29,7 @@ class _GroceryListPageState extends State<GroceryListPage> {
   bool isFavourite = false;
   Timestamp? _reminder;
   Map<String, dynamic>? currentGroceryList;
+  String? _categoryFilter;
 
   Future<void> _updateTotalPrice() async {
     final total = await _groceryListService.calculateTotalPrice(widget.listId);
@@ -214,8 +216,15 @@ class _GroceryListPageState extends State<GroceryListPage> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.teal,
+              ),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+              ),
               onPressed: () async {
                 if (selectedCategory != currentCategory) {
                   await _productService.updateProductCategory(
@@ -238,11 +247,19 @@ class _GroceryListPageState extends State<GroceryListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Grocery List"),
+        backgroundColor: Colors.white,
+        title: Text(
+          "Grocery List",
+          style: GoogleFonts.notoSerif(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_add_alt_1), // invite icon
-            tooltip: 'Felhasználó meghívása',
+            icon: const Icon(Icons.person_add_alt_1),
+            color: Colors.black, // invite icon
+            tooltip: 'Invite user',
             onPressed: () {
               showDialog(
                 context: context,
@@ -252,153 +269,153 @@ class _GroceryListPageState extends State<GroceryListPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Text("Details for list: ${widget.listId}"),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (_) => true, // Prevent rebuilds on scroll
-                child: StreamBuilder<List<Product>>(
-                  stream: _groceryListService.getItemsFromList(widget.listId),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting &&
-                        _isInitialLoad) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                          child: Text('No items in this list yet'));
-                    } else {
-                      // Only update products if they actually changed
+      body: Container(
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              //Text("Details for list: ${widget.listId}"),
 
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        _currentProducts = snapshot.data!;
-                        _updateTotalPrice();
-                        _isInitialLoad = false;
-                      });
+              Expanded(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (_) => true, // Prevent rebuilds on scroll
+                  child: StreamBuilder<List<Product>>(
+                    stream: _groceryListService.getItemsFromList(widget.listId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting &&
+                          _isInitialLoad) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                            child: Text('No items in this list yet'));
+                      } else {
+                        // Only update products if they actually changed
 
-                      return GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.8,
-                        ),
-                        itemCount: _currentProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = _currentProducts[index];
-                          return GestureDetector(
-                            onTap: () {
-                              _showCategoryDialog(
-                                  context, widget.listId, product.productUID!);
-                            },
-                            child: GroceryListItemCard(
-                              key: ValueKey(product
-                                  .productUID), // Important for state preservation
-                              product: product,
-                              listId: widget.listId,
-                              groceryService: _groceryListService,
-                              onQuantityChanged: _updateTotalPrice,
-                              addedBy: _groceryListService
-                                  .getUserNameWhoAddedProduct(
-                                      widget.listId, product.productUID),
-                              store: _groceryListService
-                                  .getStoreForProduct(product.productUID),
-                              category:
-                                  _productService.getCurrentCategoryForItem(
-                                      widget.listId, product.productUID),
-                            ),
-                          );
-                        },
-                      );
-                    }
-                  },
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _currentProducts = snapshot.data!;
+                          _updateTotalPrice();
+                          _isInitialLoad = false;
+                        });
+
+                        return GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.8,
+                          ),
+                          itemCount: _currentProducts.length,
+                          itemBuilder: (context, index) {
+                            final product = _currentProducts[index];
+                            return GestureDetector(
+                              onTap: () {
+                                _showCategoryDialog(context, widget.listId,
+                                    product.productUID!);
+                              },
+                              child: GroceryListItemCard(
+                                key: ValueKey(product
+                                    .productUID), // Important for state preservation
+                                product: product,
+                                listId: widget.listId,
+                                groceryService: _groceryListService,
+                                onQuantityChanged: _updateTotalPrice,
+                                addedBy: _groceryListService
+                                    .getUserNameWhoAddedProduct(
+                                        widget.listId, product.productUID),
+                                store: _groceryListService
+                                    .getStoreForProduct(product.productUID),
+                                category:
+                                    _productService.getCurrentCategoryForItem(
+                                        widget.listId, product.productUID),
+                              ),
+                            );
+                          },
+                        );
+                      }
+                    },
+                  ),
                 ),
               ),
-            ),
-            // Total price container
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  width: 220,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: COLOR_BEIGE,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    //mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      const Text("Total:",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text("${_totalPrice.toStringAsFixed(2)} Ron",
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  width: 200,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: COLOR_BEIGE,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          _reminder != null &&
-                                  _reminder!.toDate().isAfter(DateTime.now())
-                              ? Icons.notifications_active
-                              : Icons.notifications_none,
-                          color: Colors.black,
+              // Total price container
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    width: 220,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: COLOR_BEIGE,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        const Text("Total:",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        SizedBox(
+                          width: 10,
                         ),
-                        // onPressed: () async {
-                        //   await NotificationService.showTestNotification();
-                        // },
-                        onPressed: () => _pickReminderDateTime(context),
-                      ),
-                      // IconButton(
-                      //   icon: const Icon(Icons.notifications_none),
-                      //   onPressed: () {
-                      //     // TODO: Add your notification logic
-                      //   },
-                      // ),
-                      IconButton(
-                        icon: Icon(
-                          isFavourite ? Icons.favorite : Icons.favorite_border,
-                          color: Colors.black,
-                        ),
-                        onPressed: _toggleFavourite,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.map_outlined),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    MapPage(groceryList: currentGroceryList)),
-                          );
-                        },
-                      ),
-                    ],
+                        Text("${_totalPrice.toStringAsFixed(2)} Ron",
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    width: 200,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: COLOR_BEIGE,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            _reminder != null &&
+                                    _reminder!.toDate().isAfter(DateTime.now())
+                                ? Icons.notifications_active
+                                : Icons.notifications_none,
+                            color: Colors.black,
+                          ),
+                          // onPressed: () async {
+                          //   await NotificationService.showTestNotification();
+                          // },
+                          onPressed: () => _pickReminderDateTime(context),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            isFavourite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: Colors.black,
+                          ),
+                          onPressed: _toggleFavourite,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.map_outlined),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      MapPage(groceryList: currentGroceryList)),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

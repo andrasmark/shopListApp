@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shop_list_app/constants/color_scheme.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -49,26 +51,43 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Settings")),
-      body: Column(
-        children: [
-          SwitchListTile(
-            title: const Text("Location Access"),
-            value: _locationAllowed,
-            onChanged: (_) async {
-              await _requestLocationPermission();
-              await _checkPermissions();
-            },
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Text(
+          "Settings",
+          style: GoogleFonts.notoSerif(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
           ),
-          SwitchListTile(
-            title: const Text("Notifications"),
-            value: _notificationsAllowed,
-            onChanged: (_) async {
-              await _requestNotificationPermission();
-              await _checkPermissions();
-            },
-          ),
-        ],
+        ),
+      ),
+      body: Container(
+        color: COLOR_BEIGE,
+        child: Column(
+          children: [
+            SwitchListTile(
+              title: const Text("Location Access"),
+              value: _locationAllowed,
+              activeColor: Colors.black,
+              activeTrackColor: Colors.teal,
+              inactiveTrackColor: Colors.white,
+              onChanged: (_) async {
+                await _requestLocationPermission();
+                await _checkPermissions();
+              },
+            ),
+            SwitchListTile(
+              title: const Text("Notifications"),
+              value: _notificationsAllowed,
+              activeColor: Colors.teal,
+              inactiveTrackColor: Colors.white,
+              onChanged: (_) async {
+                await _requestNotificationPermission();
+                await _checkPermissions();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

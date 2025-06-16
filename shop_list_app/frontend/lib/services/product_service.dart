@@ -64,6 +64,7 @@ class ProductService {
         productId: {
           'quantity': quantity,
           'addedBy': userId,
+          'category': null,
         }
       }
     }, SetOptions(merge: true));
@@ -175,7 +176,7 @@ class ProductService {
           productImage: data['productImage'],
           productPrice: _parseDouble(data['productPrice']),
           productOldPrice: _parseDouble(data['productOldPrice']),
-          productDiscount: null,
+          productDiscount: data['productDiscount'],
           productSubtitle: null,
         );
       }).toList();

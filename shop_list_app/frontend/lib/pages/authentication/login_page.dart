@@ -33,7 +33,13 @@ class _LoginPageState extends State<LoginPage> {
                 MaterialPageRoute(builder: (context) => const HomePage()),
               );
             },
-            child: const Text("Skip"),
+            child: const Text(
+              "Skip",
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -78,9 +84,18 @@ class _LoginPageState extends State<LoginPage> {
                 height: 24.0,
               ),
               RoundedButton(
-                colour: Colors.lightBlueAccent,
+                colour: Colors.teal,
                 title: 'Log in',
                 onPress: () async {
+                  if (!email.contains('@') || password.length < 6) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Please enter a valid email and password (min 6 chars).'),
+                      ),
+                    );
+                    return;
+                  }
                   setState(() {
                     showSpinner = true;
                   });
@@ -128,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Text(
                       'Register now!',
                       style: TextStyle(
-                        color: Colors.blue,
+                        color: Colors.teal,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

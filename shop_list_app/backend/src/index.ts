@@ -19,7 +19,7 @@ app.get("/scrape", async (req, res) => {
   //await scrapeLidl();
 
   console.log("Adatok lekérése folyamatban... AUCHAN");
-  //await scrapeAuchan();
+  await scrapeAuchan();
 
   res.send("Scraping kész! Nézd meg a konzolt.");
   console.log("Scraping kész!");

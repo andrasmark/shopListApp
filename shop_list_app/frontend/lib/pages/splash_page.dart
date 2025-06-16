@@ -26,6 +26,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Padding(
@@ -50,7 +51,7 @@ class _SplashPageState extends State<SplashPage> {
           Text(
             "Find groceries and create grocery-lists",
             style: TextStyle(
-              color: Colors.grey,
+              color: Colors.black,
             ),
           ),
         ],

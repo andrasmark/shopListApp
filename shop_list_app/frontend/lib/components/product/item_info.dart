@@ -39,11 +39,11 @@ class ItemInfo extends StatelessWidget {
       );
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$_quantity db termék hozzáadva')),
+        SnackBar(content: Text('$_quantity product added')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hiba: ${e.toString()}')),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
   }
@@ -54,11 +54,11 @@ class ItemInfo extends StatelessWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Text('Termék hozzáadása'),
+            title: Text('Add product'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Mennyiség:'),
+                Text('Quantity:'),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -86,17 +86,17 @@ class ItemInfo extends StatelessWidget {
                       return CircularProgressIndicator();
                     }
                     if (snapshot.hasError || !snapshot.hasData) {
-                      return Text('Hiba a listák betöltésében');
+                      return Text('Error while loading list');
                     }
                     final lists = snapshot.data!;
                     if (lists.isEmpty) {
-                      return Text('Nincs elérhető lista');
+                      return Text('No list available');
                     }
                     return Column(
                       children: lists
                           .map((list) => ListTile(
                                 title:
-                                    Text(list['listName'] ?? 'Névtelen lista'),
+                                    Text(list['listName'] ?? 'Nameless list'),
                                 onTap: () =>
                                     _addToGroceryList(context, list['id']),
                               ))
@@ -109,7 +109,10 @@ class ItemInfo extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Mégse'),
+                child: Text('Cancel'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.teal,
+                ),
               ),
             ],
           );
@@ -176,7 +179,7 @@ class ItemInfo extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.only(top: 4),
                     child: Text(
-                      'Discount: ${product.productDiscount}',
+                      '${product.productDiscount}',
                       style: TextStyle(fontSize: 16, color: Colors.green),
                     ),
                   ),
@@ -192,6 +195,10 @@ class ItemInfo extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () => _showListSelectionDialog(context),
                   child: Text('Add to Grocery List'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ],
             ),

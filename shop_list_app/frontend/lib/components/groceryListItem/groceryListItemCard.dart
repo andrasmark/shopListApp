@@ -131,128 +131,135 @@ class _GroceryListItemCardState extends State<GroceryListItemCard> {
                             onLongPress: () => _showDeleteDialog(context),
                             child: Card(
                               color: Colors.white,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        // User who added the item
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.person_outline,
-                                                size: 16),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              addedBy,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          children: [
-                                            Icon(getCategoryIcon(category),
-                                                size: 16),
-                                            const SizedBox(width: 4),
-                                            // Text(
-                                            //   category,
-                                            //   style: const TextStyle(
-                                            //     fontSize: 12,
-                                            //     color: Colors.grey,
-                                            //   ),
-                                            // ),
-                                          ],
-                                        ),
-                                        // Store information
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.store_outlined,
-                                                size: 16),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              store,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Termék kép
-                                  if (widget.product.productImage != null)
-                                    Image.network(
-                                      widget.product.productImage!,
-                                      height: 80,
-                                      width: 80,
-                                      errorBuilder: (context, error,
-                                              stackTrace) =>
-                                          const Icon(Icons.image_not_supported,
-                                              size: 50),
-                                    ),
-
-                                  // Termék név
-                                  if (widget.product.productName != null)
+                              child: Flexible(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4),
-                                      child: Text(widget.product.productName!),
-                                    ),
-
-                                  // Ár
-                                  if (widget.product.productPrice != null)
-                                    Text(
-                                      '${widget.product.productPrice!.toStringAsFixed(2)} Ron',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-
-                                  // Akció
-                                  if (widget.product.productDiscount != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        'Discount: ${widget.product.productDiscount}%',
-                                        style: const TextStyle(
-                                            color: Colors.green),
+                                      padding:
+                                          const EdgeInsets.fromLTRB(8, 8, 8, 4),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          // User who added the item
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.person_outline,
+                                                  size: 16),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                addedBy,
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                getCategoryIcon(category),
+                                                color: category == null ||
+                                                        ![
+                                                          'Meat',
+                                                          'Fruit',
+                                                          'Vegetable',
+                                                          'Cleaning',
+                                                          'Drink',
+                                                          'Snack',
+                                                          'Food'
+                                                        ].contains(category)
+                                                    ? Colors.red
+                                                    : Colors.black,
+                                              ),
+                                              const SizedBox(width: 4),
+                                            ],
+                                          ),
+                                          // Store information
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.store_outlined,
+                                                  size: 16),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                store,
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
-
-                                  // Mennyiség választó
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.remove),
-                                          onPressed: () =>
-                                              _updateQuantity(quantity - 1),
+                                    if (widget.product.productImage != null)
+                                      Image.network(
+                                        widget.product.productImage!,
+                                        height: 80,
+                                        width: 80,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                                    Icons.image_not_supported,
+                                                    size: 50),
+                                      ),
+                                    if (widget.product.productName != null)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4),
+                                        child:
+                                            Text(widget.product.productName!),
+                                      ),
+                                    if (widget.product.productPrice != null)
+                                      Text(
+                                        '${widget.product.productPrice!.toStringAsFixed(2)} Ron',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    if (widget.product.productDiscount != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          '${widget.product.productDiscount}',
+                                          style: const TextStyle(
+                                            color: Colors.green,
+                                            fontSize: 15,
+                                          ),
                                         ),
-                                        Text(
-                                          '$quantity',
-                                          style: const TextStyle(fontSize: 18),
+                                      ),
+                                    Flexible(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.remove),
+                                              onPressed: () =>
+                                                  _updateQuantity(quantity - 1),
+                                            ),
+                                            Text(
+                                              '$quantity',
+                                              style:
+                                                  const TextStyle(fontSize: 18),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.add),
+                                              onPressed: () =>
+                                                  _updateQuantity(quantity + 1),
+                                            ),
+                                          ],
                                         ),
-                                        IconButton(
-                                          icon: const Icon(Icons.add),
-                                          onPressed: () =>
-                                              _updateQuantity(quantity + 1),
-                                        ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           );

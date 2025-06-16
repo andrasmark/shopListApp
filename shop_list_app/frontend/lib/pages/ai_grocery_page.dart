@@ -176,6 +176,8 @@ Herbs/Spices - X%:
           max: 100,
           divisions: 100,
           label: '${value.toInt()}%',
+          activeColor: COLOR_ORANGE,
+          inactiveColor: COLOR_ORANGE.withOpacity(0.3),
           onChanged: (newVal) {
             double total =
                 protein + carbs + herbs + fats + fiber - value + newVal;
@@ -192,6 +194,7 @@ Herbs/Spices - X%:
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(
           "AI Grocery Generator",
           style: GoogleFonts.notoSerif(
@@ -225,13 +228,18 @@ Herbs/Spices - X%:
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Text("Budget: ${budget.toInt()} RON"),
+              Text(
+                "Budget: ${budget.toInt()} RON",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
               Slider(
                 value: budget,
                 min: 5,
                 max: 500,
                 divisions: 49,
                 label: '${budget.toInt()} RON',
+                activeColor: COLOR_ORANGE,
+                inactiveColor: COLOR_ORANGE.withOpacity(0.3),
                 onChanged: (value) => setState(() => budget = value),
               ),
               buildSlider(
@@ -249,6 +257,12 @@ Herbs/Spices - X%:
                         ? null
                         : generateGroceryList,
                     child: const Text("Generate Grocery List"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: COLOR_ORANGE,
+                      foregroundColor: Colors.white, // szövegszín
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                    ),
                   ),
                   SizedBox(
                     width: 16,
@@ -266,6 +280,12 @@ Herbs/Spices - X%:
                       }
                     },
                     child: const Text("Save"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: COLOR_ORANGE,
+                      foregroundColor: Colors.white, // szövegszín
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                    ),
                   ),
                 ],
               ),

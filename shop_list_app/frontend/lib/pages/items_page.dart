@@ -128,6 +128,7 @@ class _ItemsPageState extends State<ItemsPage> {
                     child: FilterChip(
                       label: Text(store),
                       selected: _selectedStore == store,
+                      selectedColor: Colors.teal,
                       onSelected: (bool selected) {
                         setState(() {
                           _selectedStore = selected ? store : 'Kaufland';
@@ -144,7 +145,10 @@ class _ItemsPageState extends State<ItemsPage> {
             SizedBox(height: 8),
 
             // Store name header
-            Text("Products from $_selectedStore"),
+            Text(
+              "Products from $_selectedStore",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
 
             // Products list
             Expanded(
