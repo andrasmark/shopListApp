@@ -1,0 +1,38 @@
+name: Scheduled Scraping
+
+on:
+  schedule:
+    - cron: '0 8 */3 * *'   # minden 3. napon 8:00 UTC
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend  
+
+    steps:
+      - name: Repository klónozása
+        uses: actions/checkout@v4
+
+      - name: Node.js telepítése
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Függőségek telepítése
+        run: npm install
+
+      - name: `.env` létrehozása
+        run: |
+          echo "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}" >> .env
+          echo "FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}" >> .env
+          echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> .env
+
+      - name: TypeScript build
+        run: npx tsc
+
+      - name: Scraper futtatása
+        run: node dist/index.js scrape

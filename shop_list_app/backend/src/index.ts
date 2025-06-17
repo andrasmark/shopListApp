@@ -9,17 +9,34 @@ app.get("/", (req, res) => {
   });
 
 app.get("/scrape", async (req, res) => {
-  console.log("Adatok lekérése folyamatban... KAUFLAND");
-  //await scrapeKaufland();
+  try {
+    console.log("Adatok lekérése folyamatban... KAUFLAND");
+    await scrapeKaufland();
+  } catch (error) {
+    console.error("KAUFLAND - Hiba az adatlekérésben:", error);
+  }
   
-  console.log("Adatok lekérése folyamatban... CARREFOUR");
-  // await scrapeCarrefour();
+  try {
+    console.log("Adatok lekérése folyamatban... CARREFOUR");
+    await scrapeCarrefour();
+  } catch (error) {
+    console.error("CARREFOUR - Hiba az adatlekérésben:", error);
+  }
+ 
+  try {
+    console.log("Adatok lekérése folyamatban... LIDL");
+    await scrapeLidl();
+  }catch (error) {
+    console.error("LIDL - Hiba az adatlekérésben:", error);
+  }
   
-  console.log("Adatok lekérése folyamatban... LIDL");
-  //await scrapeLidl();
-
-  console.log("Adatok lekérése folyamatban... AUCHAN");
-  await scrapeAuchan();
+  try {
+    console.log("Adatok lekérése folyamatban... AUCHAN");
+    await scrapeAuchan();
+  } catch (error) {
+    console.error("AUCHAN - Hiba az adatlekérésben:", error);
+  }
+  
 
   res.send("Scraping kész! Nézd meg a konzolt.");
   console.log("Scraping kész!");
@@ -32,3 +49,21 @@ app.get("/api/products", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Szerver fut: http://localhost:${PORT}`);
 });
+
+if (require.main === module) {
+  const arg = process.argv[2];
+  if (arg === 'scrape') {
+    (async () => {
+      console.log("CLI scraping indul...");
+      await Promise.allSettled([
+        scrapeKaufland().catch(err => console.error("Kaufland:", err)),
+        scrapeCarrefour().catch(err => console.error("Carrefour:", err)),
+        scrapeLidl().catch(err => console.error("Lidl:", err)),
+        scrapeAuchan().catch(err => console.error("Auchan:", err)),
+      ]);
+      console.log("CLI scraping befejeződött.");
+    })();
+  }
+}
+
+
