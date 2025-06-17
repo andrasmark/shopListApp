@@ -91,7 +91,7 @@ export async function scrapeLidl() {
 
     console.log("Lekért termékek LIDL:", products);
 
-    await saveLIDLProductsToFirestore(products);
+    //await saveLIDLProductsToFirestore(products);
     console.log("Termékek sikeresen feltöltve a Firestore-ba!");
   } catch (error) {
     console.error("Hiba történt a scraping során LIDL:", error);
@@ -177,7 +177,7 @@ export async function scrapeCarrefour() {
     });
 
     console.log("Lekért termékek CARREFOUR:", products);
-    await saveCARREFOURProductsToFirestore(products);
+    //await saveCARREFOURProductsToFirestore(products);
   } catch (error) {
     console.error("Hiba történt a scraping során CARREFOUR:", error);
   } finally {
@@ -242,7 +242,7 @@ export async function scrapeAuchan() {
     });
 
     console.log("Lekért termékek AUCHAN:", products);
-    await saveAUCHANProductsToFirestore(products);
+    //await saveAUCHANProductsToFirestore(products);
   } catch (error) {
     console.error("Hiba történt a scraping során AUCHAN:", error);
   } finally {
