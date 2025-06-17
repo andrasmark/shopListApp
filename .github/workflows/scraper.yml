@@ -9,9 +9,9 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
 
-    # defaults:
-    #   run:
-    #     working-directory: backend  
+    defaults:
+      run:
+        working-directory: shopListApp/backend  
 
     steps:
       - name: Repository klónozása
