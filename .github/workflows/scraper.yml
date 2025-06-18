@@ -26,10 +26,7 @@ jobs:
           node-version: 20
 
       - name: Függőségek telepítése
-        run: npm install
-
-      - name: Puppeteer Chrome telepítése
-        run: npx puppeteer browsers install chrome  
+        run: npm ci
 
       - name: .env létrehozása
         run: |
