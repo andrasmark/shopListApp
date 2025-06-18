@@ -11,15 +11,15 @@ jobs:
 
     defaults:
       run:
-        working-directory: backend  
+        working-directory: shop_list_app/backend  
 
     steps:
       - name: Repository klónozása
         uses: actions/checkout@v4
-
+        
       - name: Debug – fájlok listázása
         run: ls -R
-
+        
       - name: Node.js telepítése
         uses: actions/setup-node@v4
         with:
@@ -28,7 +28,10 @@ jobs:
       - name: Függőségek telepítése
         run: npm install
 
-      - name: `.env` létrehozása
+      - name: Puppeteer Chrome telepítése
+        run: npx puppeteer browsers install chrome  
+
+      - name: .env létrehozása
         run: |
           echo "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}" >> .env
           echo "FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}" >> .env
