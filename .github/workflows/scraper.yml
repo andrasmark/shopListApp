@@ -11,7 +11,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: backend  
+        working-directory: shop_list_app/backend  
 
     steps:
       - name: Repository klónozása
