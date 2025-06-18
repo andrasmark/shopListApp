@@ -12,6 +12,7 @@ app.get("/scrape", async (req, res) => {
   try {
     console.log("Adatok lekérése folyamatban... KAUFLAND");
     await scrapeKaufland();
+    console.log("KAUFLAND scraping kész");
   } catch (error) {
     console.error("KAUFLAND - Hiba az adatlekérésben:", error);
   }
@@ -19,6 +20,7 @@ app.get("/scrape", async (req, res) => {
   try {
     console.log("Adatok lekérése folyamatban... CARREFOUR");
     await scrapeCarrefour();
+    console.log("CARREFOUR scraping kész");
   } catch (error) {
     console.error("CARREFOUR - Hiba az adatlekérésben:", error);
   }
@@ -26,6 +28,7 @@ app.get("/scrape", async (req, res) => {
   try {
     console.log("Adatok lekérése folyamatban... LIDL");
     await scrapeLidl();
+    console.log("LIDL scraping kész");
   }catch (error) {
     console.error("LIDL - Hiba az adatlekérésben:", error);
   }
@@ -33,6 +36,7 @@ app.get("/scrape", async (req, res) => {
   try {
     console.log("Adatok lekérése folyamatban... AUCHAN");
     await scrapeAuchan();
+    console.log("AUCHAN scraping kész");
   } catch (error) {
     console.error("AUCHAN - Hiba az adatlekérésben:", error);
   }
