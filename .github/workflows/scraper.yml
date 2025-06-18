@@ -28,6 +28,9 @@ jobs:
       - name: Függőségek telepítése
         run: npm install
 
+      - name: Puppeteer Chrome telepítése
+        run: npx puppeteer browsers install chrome  
+
       - name: .env létrehozása
         run: |
           echo "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}" >> .env
