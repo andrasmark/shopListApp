@@ -17,6 +17,9 @@ jobs:
       - name: Repository klónozása
         uses: actions/checkout@v4
 
+      - name: Debug – fájlok listázása
+        run: ls -R
+
       - name: Node.js telepítése
         uses: actions/setup-node@v4
         with:
