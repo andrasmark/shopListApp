@@ -20,7 +20,8 @@ jobs:
       - name: Install Chrome dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget chromium-chromedriver  
+          sudo apt-get install -y wget chromium-browser
+          sudo ln -s /usr/bin/chromium-browser /usr/bin/chrome 
         
       - name: Debug – fájlok listázása
         run: ls -R
@@ -29,6 +30,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Függőségek telepítése
         run: npm ci
@@ -38,9 +40,13 @@ jobs:
           echo "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}" >> .env
           echo "FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}" >> .env
           echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> .env
+          echo "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser" >> .env
 
       - name: TypeScript build
         run: npx tsc
 
       - name: Scraper futtatása
         run: node dist/index.js scrape
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: true
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
