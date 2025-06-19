@@ -66,6 +66,7 @@ if (require.main === module) {
         scrapeAuchan().catch(err => console.error("Auchan:", err)),
       ]);
       console.log("CLI scraping befejeződött.");
+      process.exit(0);
     })();
   }
 }

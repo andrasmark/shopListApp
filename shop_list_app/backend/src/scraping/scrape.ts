@@ -3,8 +3,22 @@ import axios from "axios";
 import cheerio from "cheerio";
 import { db } from "../firebase/firestore";
 
+async function launchBrowser() {
+  return await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--single-process'
+    ],
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+  });
+}
+
 export async function scrapeKaufland() {
-  const browser = await puppeteer.launch({ headless: true });
+  //const browser = await puppeteer.launch({ headless: true });
+  const browser = await launchBrowser();
   const page = await browser.newPage();
 
   await page.setUserAgent(
@@ -50,6 +64,7 @@ export async function scrapeKaufland() {
     console.log("Termékek sikeresen feltöltve a Firestore-ba!");
   } catch (error) {
     console.error("Hiba történt a scraping során KAUFLAND:", error);
+    throw error;
   } finally {
     await browser.close();
   }
@@ -95,6 +110,7 @@ export async function scrapeLidl() {
     console.log("Termékek sikeresen feltöltve a Firestore-ba!");
   } catch (error) {
     console.error("Hiba történt a scraping során LIDL:", error);
+    throw error;
   } finally {
     await browser.close();
   }
@@ -180,6 +196,7 @@ export async function scrapeCarrefour() {
     //await saveCARREFOURProductsToFirestore(products);
   } catch (error) {
     console.error("Hiba történt a scraping során CARREFOUR:", error);
+    throw error;
   } finally {
     await browser.close();
   }
@@ -245,6 +262,7 @@ export async function scrapeAuchan() {
     //await saveAUCHANProductsToFirestore(products);
   } catch (error) {
     console.error("Hiba történt a scraping során AUCHAN:", error);
+    throw error;
   } finally {
     await browser.close();
   }
