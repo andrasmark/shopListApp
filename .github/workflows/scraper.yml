@@ -31,6 +31,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: 'shop_list_app/backend/package-lock.json'
 
       - name: Függőségek telepítése
         run: npm ci
