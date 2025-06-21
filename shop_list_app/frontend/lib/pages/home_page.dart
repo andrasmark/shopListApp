@@ -98,7 +98,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final userId = user.uid;
     final snapshot = await FirebaseFirestore.instance
         .collection('groceryLists')
         .where('sharedWith', arrayContains: userId)
@@ -107,13 +107,18 @@ class _HomePageState extends State<HomePage> {
     final Map<DateTime, List<String>> events = {};
 
     for (var doc in snapshot.docs) {
-      final reminderTimestamp = doc['reminder'];
-      if (reminderTimestamp != null) {
-        final date = (reminderTimestamp as Timestamp).toDate();
-        final eventDay = DateTime(date.year, date.month, date.day);
+      final reminders = doc['reminder'];
 
-        events.putIfAbsent(eventDay, () => []);
-        events[eventDay]!.add(doc['listName'] ?? 'Unnamed List');
+      if (reminders is List) {
+        for (var r in reminders) {
+          if (r is Timestamp) {
+            final date = r.toDate();
+            final eventDay = DateTime(date.year, date.month, date.day);
+
+            events.putIfAbsent(eventDay, () => []);
+            events[eventDay]!.add(doc['listName'] ?? 'Unnamed List');
+          }
+        }
       }
     }
 
@@ -121,6 +126,39 @@ class _HomePageState extends State<HomePage> {
       _reminderEvents = events;
     });
   }
+
+  // Future<void> _loadReminders() async {
+  //   final user = FirebaseAuth.instance.currentUser;
+  //   if (user == null) {
+  //     setState(() {
+  //       _reminderEvents = {};
+  //     });
+  //     return;
+  //   }
+  //
+  //   final userId = FirebaseAuth.instance.currentUser!.uid;
+  //   final snapshot = await FirebaseFirestore.instance
+  //       .collection('groceryLists')
+  //       .where('sharedWith', arrayContains: userId)
+  //       .get();
+  //
+  //   final Map<DateTime, List<String>> events = {};
+  //
+  //   for (var doc in snapshot.docs) {
+  //     final reminderTimestamp = doc['reminder'];
+  //     if (reminderTimestamp != null) {
+  //       final date = (reminderTimestamp as Timestamp).toDate();
+  //       final eventDay = DateTime(date.year, date.month, date.day);
+  //
+  //       events.putIfAbsent(eventDay, () => []);
+  //       events[eventDay]!.add(doc['listName'] ?? 'Unnamed List');
+  //     }
+  //   }
+  //
+  //   setState(() {
+  //     _reminderEvents = events;
+  //   });
+  // }
 
   bool isSameMonth(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month;

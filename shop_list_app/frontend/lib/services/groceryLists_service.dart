@@ -72,7 +72,7 @@ class GrocerylistService {
       'listName': newName,
       'sharedWith': [userId],
       'favourite': false,
-      'reminder': null,
+      'reminder': [],
       'products': originalData['products'] ?? {},
     });
 
@@ -97,7 +97,6 @@ class GrocerylistService {
         .get();
 
     final listIds = List<String>.from(userDoc.data()?['groceryLists'] ?? []);
-
     Map<String, double> spendingPerCategory = {};
 
     for (final listId in listIds) {
@@ -106,15 +105,18 @@ class GrocerylistService {
           .doc(listId)
           .get();
 
-      final reminder = listDoc.data()?['reminder'];
-      if (reminder is Timestamp) {
-        final reminderDate = reminder.toDate();
-        if (reminderDate.isBefore(start) || reminderDate.isAfter(end)) {
-          continue;
+      final reminders = listDoc.data()?['reminder'];
+      if (reminders is! List) continue;
+
+      int validReminderCount = reminders.where((ts) {
+        if (ts is Timestamp) {
+          final d = ts.toDate();
+          return d.isAfter(start) && d.isBefore(end);
         }
-      } else {
-        continue;
-      }
+        return false;
+      }).length;
+
+      if (validReminderCount == 0) continue;
 
       final products = listDoc.data()?['products'] as Map<String, dynamic>?;
 
@@ -130,7 +132,7 @@ class GrocerylistService {
               await listDoc.reference.collection('items').doc(itemId).get();
           final price = itemDoc.data()?['price'] ?? 0;
 
-          final total = quantity * price;
+          final total = quantity * price * validReminderCount;
 
           spendingPerCategory[category] =
               (spendingPerCategory[category] ?? 0) + total;
@@ -146,16 +148,14 @@ class GrocerylistService {
     if (uid == null) return;
 
     try {
-      // 1. Új lista létrehozása groceryLists kollekcióban
       DocumentReference listRef = await _db.collection('groceryLists').add({
         'listName': listName,
         'favourite': false,
-        'reminder': null,
+        'reminder': [],
         'sharedWith': [uid],
         'createdAt': Timestamp.now(),
       });
 
-      // 2. Lista ID hozzáadása a felhasználó groceryLists mezőjéhez
       final userDocRef = _db.collection('users').doc(uid);
 
       await userDocRef.set({

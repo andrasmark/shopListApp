@@ -28,6 +28,8 @@ class _GroceryListPageState extends State<GroceryListPage> {
   bool _isInitialLoad = true;
   bool isFavourite = false;
   Timestamp? _reminder;
+  //List<Timestamp>? _reminder;
+
   Map<String, dynamic>? currentGroceryList;
   String? _categoryFilter;
 
@@ -66,6 +68,19 @@ class _GroceryListPageState extends State<GroceryListPage> {
     }
   }
 
+  // Future<void> _fetchReminder() async {
+  //   final doc = await FirebaseFirestore.instance
+  //       .collection('groceryLists')
+  //       .doc(widget.listId)
+  //       .get();
+  //
+  //   final data = doc.data();
+  //   if (data != null && data['reminder'] != null) {
+  //     setState(() {
+  //       _reminder = data['reminder'];
+  //     });
+  //   }
+  // }
   Future<void> _fetchReminder() async {
     final doc = await FirebaseFirestore.instance
         .collection('groceryLists')
@@ -73,10 +88,23 @@ class _GroceryListPageState extends State<GroceryListPage> {
         .get();
 
     final data = doc.data();
-    if (data != null && data['reminder'] != null) {
-      setState(() {
-        _reminder = data['reminder'];
-      });
+    if (data != null && data['reminder'] is List) {
+      final List<Timestamp> reminders =
+          (data['reminder'] as List).whereType<Timestamp>().toList();
+
+      if (reminders.isNotEmpty) {
+        // closest time in future
+        reminders.sort((a, b) => a.compareTo(b));
+        final now = DateTime.now();
+        final upcoming = reminders.firstWhere(
+          (ts) => ts.toDate().isAfter(now),
+          orElse: () => reminders.first,
+        );
+
+        setState(() {
+          _reminder = upcoming;
+        });
+      }
     }
   }
 
@@ -123,20 +151,67 @@ class _GroceryListPageState extends State<GroceryListPage> {
 
     final Timestamp reminderTimestamp = Timestamp.fromDate(combined);
 
+    // Firestore-ban hozzáadjuk a tömbhöz
     await FirebaseFirestore.instance
         .collection('groceryLists')
         .doc(widget.listId)
-        .update({'reminder': reminderTimestamp});
+        .update({
+      'reminder': FieldValue.arrayUnion([reminderTimestamp]),
+    });
 
+    // Lokális értesítés
     await NotificationService().scheduleReminder(
       listId: widget.listId,
       reminderTime: reminderTimestamp,
     );
 
     setState(() {
-      _reminder = reminderTimestamp;
+      _reminder =
+          reminderTimestamp; // ez most csak az utolsó, tetszés szerint listává is teheted
     });
   }
+
+  // Future<void> _pickReminderDateTime(BuildContext context) async {
+  //   final DateTime? date = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now(),
+  //     firstDate: DateTime.now(),
+  //     lastDate: DateTime.now().add(const Duration(days: 365)),
+  //   );
+  //
+  //   if (date == null) return;
+  //
+  //   final TimeOfDay? time = await showTimePicker(
+  //     context: context,
+  //     initialTime: TimeOfDay.now(),
+  //   );
+  //
+  //   if (time == null) return;
+  //
+  //   final DateTime combined = DateTime(
+  //     date.year,
+  //     date.month,
+  //     date.day,
+  //     time.hour,
+  //     time.minute,
+  //   );
+  //
+  //   final Timestamp reminderTimestamp = Timestamp.fromDate(combined);
+  //
+  //   await FirebaseFirestore.instance
+  //       .collection('groceryLists')
+  //       .doc(widget.listId)
+  //       .update({'reminder': reminderTimestamp});
+  //
+  //   await NotificationService().scheduleReminder(
+  //     listId: widget.listId,
+  //     reminderTime: reminderTimestamp,
+  //   );
+  //
+  //   setState(() {
+  //     _reminder = reminderTimestamp;
+  //   });
+  // }
 
   Future<void> _loadFavouriteStatus() async {
     final doc = await FirebaseFirestore.instance

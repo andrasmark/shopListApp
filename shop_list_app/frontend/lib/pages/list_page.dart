@@ -164,10 +164,20 @@ class _ListPageState extends State<ListPage> {
                             itemCount: filteredLists.length,
                             itemBuilder: (context, index) {
                               final list = filteredLists[index];
-                              final reminderTimestamp = list['reminder'];
-                              final reminderDate = reminderTimestamp != null
-                                  ? (reminderTimestamp as Timestamp).toDate()
-                                  : null;
+                              // final reminderTimestamp = list['reminder'];
+                              // final reminderDate = reminderTimestamp != null
+                              //     ? (reminderTimestamp as Timestamp).toDate()
+                              //     : null;
+                              final reminderList = list['reminder'];
+                              DateTime? reminderDate;
+
+                              if (reminderList is List &&
+                                  reminderList.isNotEmpty) {
+                                reminderList.sort((a, b) =>
+                                    (a as Timestamp).compareTo(b as Timestamp));
+                                reminderDate =
+                                    (reminderList.first as Timestamp).toDate();
+                              }
 
                               return GestureDetector(
                                 onLongPress: () {
