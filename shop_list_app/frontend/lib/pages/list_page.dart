@@ -150,11 +150,11 @@ class _ListPageState extends State<ListPage> {
                                 .toList();
                           } else if (_selectedFilter == 'Scheduled') {
                             filteredLists = allLists.where((list) {
-                              final reminder = list['reminder'];
-                              if (reminder != null && reminder is Timestamp) {
-                                return reminder
-                                    .toDate()
-                                    .isAfter(DateTime.now());
+                              final reminders = list['reminder'];
+                              if (reminders != null && reminders is List) {
+                                return reminders.any((r) =>
+                                    r is Timestamp &&
+                                    r.toDate().isAfter(DateTime.now()));
                               }
                               return false;
                             }).toList();
