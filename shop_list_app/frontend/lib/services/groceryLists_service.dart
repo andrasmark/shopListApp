@@ -7,6 +7,30 @@ import '../models/product_model.dart';
 class GrocerylistService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  Future<void> deleteGroceryList(String listId) async {
+    final listRef =
+        FirebaseFirestore.instance.collection('groceryLists').doc(listId);
+
+    // delete from items subcollection as well
+    final itemsSnapshot = await listRef.collection('items').get();
+    for (final doc in itemsSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    // delete the list
+    await listRef.delete();
+
+    final usersSnapshot = await _db.collection('users').get();
+    for (final userDoc in usersSnapshot.docs) {
+      final userLists = List<String>.from(userDoc.data()['groceryLists'] ?? []);
+      if (userLists.contains(listId)) {
+        await userDoc.reference.update({
+          'groceryLists': FieldValue.arrayRemove([listId])
+        });
+      }
+    }
+  }
+
   Future<List<String>> getStoresForList(
       Map<String, dynamic> groceryList) async {
     final allStores = ['Lidl', 'Auchan', 'Carrefour', 'Kaufland'];

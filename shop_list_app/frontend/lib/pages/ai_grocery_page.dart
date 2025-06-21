@@ -196,7 +196,7 @@ Herbs/Spices - X%:
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Text(
-          "AI Grocery Generator",
+          "AI Grocery List Generator",
           style: GoogleFonts.notoSerif(
             fontSize: 24,
             fontWeight: FontWeight.bold,

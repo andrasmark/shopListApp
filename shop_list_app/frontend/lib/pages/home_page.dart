@@ -36,7 +36,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
@@ -210,9 +209,12 @@ class _HomePageState extends State<HomePage> {
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: const Text("OK"),
+                                child: const Text("Cancel"),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.teal,
+                                ),
                               ),
-                              TextButton(
+                              ElevatedButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                   Navigator.pushReplacement(
@@ -222,6 +224,10 @@ class _HomePageState extends State<HomePage> {
                                   );
                                 },
                                 child: const Text("Log In"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.teal,
+                                  foregroundColor: Colors.white,
+                                ),
                               ),
                             ],
                           );
@@ -245,6 +251,9 @@ class _HomePageState extends State<HomePage> {
                             TextButton(
                               onPressed: () => Navigator.pop(context),
                               child: const Text("Cancel"),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.teal,
+                              ),
                             ),
                             ElevatedButton(
                               onPressed: () async {
@@ -256,6 +265,10 @@ class _HomePageState extends State<HomePage> {
                                 }
                               },
                               child: const Text("Create"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
                           ],
                         );
@@ -411,13 +424,21 @@ class _HomePageState extends State<HomePage> {
                                 (entry) => ListTile(
                                   dense: true,
                                   visualDensity: VisualDensity.compact,
-                                  leading: Icon(getCategoryIcon(entry.key)),
+                                  //leading: Icon(getCategoryIcon(entry.key)),
                                   title: Text(
-                                    entry.key,
+                                    '${entry.key}:',
                                     style: TextStyle(fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                   trailing: Text(
-                                      '${entry.value.toStringAsFixed(2)} RON'),
+                                    '${entry.value.toStringAsFixed(2)} RON',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
                                 ),
                               ),
                             ],
@@ -432,7 +453,7 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.black.withOpacity(0.5),
                     alignment: Alignment.center,
                     child: const Text(
-                      "You need to log in to access this page",
+                      "You need to log in to access this functionality!",
                       style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
                   ),

@@ -144,22 +144,16 @@ class _GroceryListItemCardState extends State<GroceryListItemCard> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           // User who added the item
-                                          Row(
-                                            children: [
-                                              const Icon(Icons.person_outline,
-                                                  size: 16),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                addedBy,
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ],
+                                          Text(
+                                            addedBy,
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.black,
+                                            ),
                                           ),
                                           Row(
                                             children: [
+                                              const SizedBox(width: 4),
                                               Icon(
                                                 getCategoryIcon(category),
                                                 color: category == null ||
@@ -179,19 +173,15 @@ class _GroceryListItemCardState extends State<GroceryListItemCard> {
                                             ],
                                           ),
                                           // Store information
-                                          Row(
-                                            children: [
-                                              const Icon(Icons.store_outlined,
-                                                  size: 16),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                store,
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.black,
-                                                ),
+                                          Flexible(
+                                            child: Text(
+                                              store,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                                color: Colors.black,
                                               ),
-                                            ],
+                                            ),
                                           ),
                                         ],
                                       ),

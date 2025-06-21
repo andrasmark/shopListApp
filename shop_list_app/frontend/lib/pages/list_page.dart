@@ -69,6 +69,31 @@ class _ListPageState extends State<ListPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          // IconButton(
+          //   icon: const Icon(Icons.notifications),
+          //   onPressed: () async {
+          //     try {
+          //       await NotificationService().showTestNotification();
+          //       // Success feedback (opcionális)
+          //       ScaffoldMessenger.of(context).showSnackBar(
+          //         const SnackBar(
+          //           content: Text('Test notification sent!'),
+          //           duration: Duration(seconds: 2),
+          //         ),
+          //       );
+          //     } catch (e) {
+          //       ScaffoldMessenger.of(context).showSnackBar(
+          //         SnackBar(
+          //           content: Text('Error sending notification: $e'),
+          //           backgroundColor: Colors.red,
+          //           duration: const Duration(seconds: 3),
+          //         ),
+          //       );
+          //     }
+          //   },
+          // ),
+        ],
       ),
       body: Container(
         color: COLOR_BEIGE,
@@ -162,12 +187,40 @@ class _ListPageState extends State<ListPage> {
                                           },
                                         ),
                                         actions: [
+                                          IconButton(
+                                            onPressed: () async {
+                                              Navigator.pop(context);
+                                              await _grocerylistService
+                                                  .deleteGroceryList(
+                                                      list['id']);
+                                              setState(() {
+                                                _groceryListsFuture =
+                                                    _userService
+                                                        .getUserGroceryLists(
+                                                            _userId!);
+                                              });
+                                            },
+                                            icon: const Icon(Icons.delete),
+                                            color: Colors.red,
+                                            iconSize: 32,
+                                            tooltip: 'Delete this list',
+                                          ),
+                                          SizedBox(
+                                            width: 55,
+                                          ),
                                           TextButton(
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Colors.teal,
+                                            ),
                                             onPressed: () =>
                                                 Navigator.pop(context),
                                             child: const Text('Cancel'),
                                           ),
-                                          TextButton(
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.teal,
+                                              foregroundColor: Colors.white,
+                                            ),
                                             onPressed: () async {
                                               Navigator.pop(context);
                                               await _grocerylistService

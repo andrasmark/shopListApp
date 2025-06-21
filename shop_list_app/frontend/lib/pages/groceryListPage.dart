@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shop_list_app/constants/color_scheme.dart';
 
 import '../components/groceryListItem/groceryListItemCard.dart';
 import '../components/invite_user_dialog.dart';
+import '../constants/color_scheme.dart';
 import '../models/product_model.dart';
 import '../services/groceryLists_service.dart';
 import '../services/notification_service.dart';
@@ -270,7 +270,8 @@ class _GroceryListPageState extends State<GroceryListPage> {
         ],
       ),
       body: Container(
-        color: Colors.white,
+        //color: Colors.white,
+        color: COLOR_BEIGE,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -338,43 +339,38 @@ class _GroceryListPageState extends State<GroceryListPage> {
                   ),
                 ),
               ),
-              // Total price container
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    width: 220,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: COLOR_BEIGE,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      //mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        const Text("Total:",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Text("${_totalPrice.toStringAsFixed(2)} Ron",
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+              Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  width: 200,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  Container(
+                  child: Row(
+                    children: [
+                      const Text("Total:",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 10),
+                      Text("${_totalPrice.toStringAsFixed(2)} Ron",
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
                     padding: const EdgeInsets.all(16),
-                    width: 200,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: COLOR_BEIGE,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         IconButton(
                           icon: Icon(
@@ -384,10 +380,16 @@ class _GroceryListPageState extends State<GroceryListPage> {
                                 : Icons.notifications_none,
                             color: Colors.black,
                           ),
-                          // onPressed: () async {
-                          //   await NotificationService.showTestNotification();
-                          // },
+                          // onPressed: () => _pickReminderDateTime(context),
                           onPressed: () => _pickReminderDateTime(context),
+                          // onPressed: () async {
+                          //   await NotificationService().scheduleNotification(
+                          //     title: 'Grocely Reminder',
+                          //     body: 'A list was scheduled for this time',
+                          //     hour: 22,
+                          //     minute: 24,
+                          //   );
+                          // },
                         ),
                         IconButton(
                           icon: Icon(
@@ -404,16 +406,93 @@ class _GroceryListPageState extends State<GroceryListPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) =>
-                                      MapPage(groceryList: currentGroceryList)),
+                                builder: (context) =>
+                                    MapPage(groceryList: currentGroceryList),
+                              ),
                             );
                           },
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                )
+              ]),
+              // Total price container
+              // Row(
+              //   //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     Container(
+              //       padding: const EdgeInsets.all(16),
+              //       width: 220,
+              //       height: 80,
+              //       decoration: BoxDecoration(
+              //         color: COLOR_BEIGE,
+              //         borderRadius: BorderRadius.circular(8),
+              //       ),
+              //       child: Row(
+              //         //mainAxisAlignment: MainAxisAlignment.spaceAround,
+              //         children: [
+              //           const Text("Total:",
+              //               style: TextStyle(
+              //                   fontSize: 18, fontWeight: FontWeight.bold)),
+              //           SizedBox(
+              //             width: 10,
+              //           ),
+              //           Text("${_totalPrice.toStringAsFixed(2)} Ron",
+              //               style: const TextStyle(
+              //                   fontSize: 18, fontWeight: FontWeight.bold)),
+              //         ],
+              //       ),
+              //     ),
+              //     Container(
+              //       padding: const EdgeInsets.all(16),
+              //       width: 200,
+              //       height: 80,
+              //       decoration: BoxDecoration(
+              //         color: COLOR_BEIGE,
+              //         borderRadius: BorderRadius.circular(8),
+              //       ),
+              //       child: Row(
+              //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+              //         children: [
+              //           IconButton(
+              //             icon: Icon(
+              //               _reminder != null &&
+              //                       _reminder!.toDate().isAfter(DateTime.now())
+              //                   ? Icons.notifications_active
+              //                   : Icons.notifications_none,
+              //               color: Colors.black,
+              //             ),
+              //             // onPressed: () async {
+              //             //   await NotificationService.showTestNotification();
+              //             // },
+              //             onPressed: () => _pickReminderDateTime(context),
+              //           ),
+              //           IconButton(
+              //             icon: Icon(
+              //               isFavourite
+              //                   ? Icons.favorite
+              //                   : Icons.favorite_border,
+              //               color: Colors.black,
+              //             ),
+              //             onPressed: _toggleFavourite,
+              //           ),
+              //           IconButton(
+              //             icon: const Icon(Icons.map_outlined),
+              //             onPressed: () {
+              //               Navigator.push(
+              //                 context,
+              //                 MaterialPageRoute(
+              //                     builder: (context) =>
+              //                         MapPage(groceryList: currentGroceryList)),
+              //               );
+              //             },
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ],
+              // ),
             ],
           ),
         ),

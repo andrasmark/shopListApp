@@ -62,7 +62,7 @@ class _RecommendedListsPageState extends State<RecommendedListsPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Text(
-          "Saved AI Lists",
+          "Saved Recommended Lists",
           style: GoogleFonts.notoSerif(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -79,12 +79,64 @@ class _RecommendedListsPageState extends State<RecommendedListsPage> {
                   itemCount: aiLists.length,
                   itemBuilder: (context, index) {
                     final list = aiLists[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(list.substring(
-                                0, list.length > 15 ? 15 : list.length) +
-                            "..."),
-                        onTap: () => showPopup(list),
+                    return GestureDetector(
+                      onLongPress: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text(
+                                  'Do you want to delete this recommended list?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Cancel'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.teal,
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    final user =
+                                        FirebaseAuth.instance.currentUser;
+                                    if (user != null) {
+                                      final userRef = FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(user.uid);
+
+                                      await userRef.update({
+                                        'ai_lists':
+                                            FieldValue.arrayRemove([list])
+                                      });
+
+                                      setState(() {
+                                        aiLists.remove(list);
+                                      });
+                                    }
+
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Delete'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.teal,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Card(
+                        color: Colors.white,
+                        child: ListTile(
+                          title: Text(list.substring(
+                                  0, list.length > 15 ? 15 : list.length) +
+                              "..."),
+                          onTap: () => showPopup(list),
+                        ),
                       ),
                     );
                   },
