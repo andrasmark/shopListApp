@@ -65,7 +65,7 @@ class MapService {
       '?location=$latitude,$longitude'
       '&radius=$radiusInMeters'
       '&keyword=$storeName'
-      '&type=supermarket' // általános kulcsszó
+      '&type=supermarket'
       '&key=$apiKey',
     );
 
