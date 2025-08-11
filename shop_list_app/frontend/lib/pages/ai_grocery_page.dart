@@ -128,8 +128,7 @@ Herbs/Spices - X%:
 ! Never change the structure. No headings, no introductions, no extra info. Just the raw categories and bullets as shown.
 """;
 
-    final apiKey = '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';
-
+    final apiKey = 'YOUR_API_KEY';
     final response = await http.post(
       Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
       headers: {

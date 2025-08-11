@@ -5,7 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 
 class MapService {
-  static const apiKey = 'AIzaSyC3qxvbGlUDtZrqT6LPqNcySJR45OXAHiE';
+  static const apiKey = 'YOUR_API_KEY';
 
   double haversineDistance(LatLng pos1, LatLng pos2) {
     const R = 6371e3;
