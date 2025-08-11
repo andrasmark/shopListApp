@@ -1,8 +1,8 @@
 name: Scheduled Scraping
 
 on:
-  schedule:
-    - cron: '0 8 */3 * *'   # minden 3. napon 8:00 UTC
+  #schedule:
+  #  - cron: '0 8 */3 * *'   # minden 3. napon 8:00 UTC
   workflow_dispatch:
 
 jobs:
